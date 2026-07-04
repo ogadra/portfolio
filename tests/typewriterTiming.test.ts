@@ -4,7 +4,7 @@ import {
 	DISPLAY_MS,
 	EMPTY_MS,
 	REMOVE_MS,
-	wordAnimationDuration
+	wordAnimationDuration,
 } from '../src/lib/typewriterTiming';
 
 describe('wordAnimationDuration', () => {

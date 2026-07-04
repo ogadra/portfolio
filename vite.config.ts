@@ -6,23 +6,23 @@ export default defineConfig({
 		categories: {
 			correctness: 'error',
 			suspicious: 'warn',
-			perf: 'warn'
+			perf: 'warn',
 		},
 		rules: {
-			'no-await-in-loop': 'off'
+			'no-await-in-loop': 'off',
 		},
-		ignorePatterns: ['dist', '.astro', 'src/paraglide', 'node_modules', '.wrangler']
+		ignorePatterns: ['dist', '.astro', 'src/paraglide', 'node_modules', '.wrangler'],
 	},
 	fmt: {
 		useTabs: true,
 		tabWidth: 2,
 		printWidth: 100,
 		singleQuote: true,
-		trailingComma: 'none',
-		semi: true
+		trailingComma: 'all',
+		semi: true,
 	},
 	test: {
 		include: ['tests/**/*.test.ts'],
-		environment: 'node'
-	}
+		environment: 'node',
+	},
 });
