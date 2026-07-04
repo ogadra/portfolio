@@ -1,13 +1,12 @@
 ---
-import squareUrl from '../assets/square.svg?url';
 ---
 
 <div class="layout-root">
 	<div class="grid-root-ground">
-		<div class="grid-ground" style={`background-image: url(${squareUrl});`}></div>
+		<div class="grid-ground"></div>
 	</div>
 	<div class="grid-root-wall">
-		<div class="grid-wall" style={`background-image: url(${squareUrl});`}></div>
+		<div class="grid-wall"></div>
 	</div>
 	<div class="shadow"></div>
 </div>
@@ -31,6 +30,7 @@ import squareUrl from '../assets/square.svg?url';
 	}
 
 	.grid-ground {
+		background-image: url('/imgs/square.svg');
 		background-size: 500px 100px;
 		background-position: 0 0;
 		display: inline-block;
@@ -43,12 +43,14 @@ import squareUrl from '../assets/square.svg?url';
 		z-index: 0;
 		position: fixed;
 		top: 0;
+		left: 0;
 		width: 100vw;
 		height: max(100%, 100vh);
 		overflow: hidden;
 	}
 
 	.grid-wall {
+		background-image: url('/imgs/square.svg');
 		background-size: 123px;
 		display: inline-block;
 		width: 100vw;

@@ -58,8 +58,13 @@ const subjects = ['Front-End', 'Back-End', 'Infrastructure'];
 		width: 60%;
 		vertical-align: middle;
 	}
-	.record,
-	.record > * {
+	.record {
+		text-align: center;
+		margin: 8%;
+	}
+
+	.record :global(p),
+	.record .cursor {
 		font-size: max(3vw, 2rem);
 		text-align: center;
 	}
@@ -67,10 +72,6 @@ const subjects = ['Front-End', 'Back-End', 'Infrastructure'];
 	.role::first-letter {
 		color: #f092ac;
 		font-size: max(4.5vw, 3rem);
-	}
-
-	.record {
-		margin: 8%;
 	}
 
 	.right {

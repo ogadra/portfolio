@@ -6,7 +6,9 @@ interface Props {
 const { subjects } = Astro.props;
 ---
 
-<p data-typewriter data-subjects={JSON.stringify(subjects)}></p>
+<p data-typewriter data-subjects={JSON.stringify(subjects)}>
+	<span class="first"></span><span class="rest"></span>
+</p>
 
 <script>
 	const APPEND_MS = 90;
@@ -16,15 +18,23 @@ const { subjects } = Astro.props;
 
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+	function render(el: HTMLElement, text: string) {
+		const first = el.querySelector<HTMLElement>(".first");
+		const rest = el.querySelector<HTMLElement>(".rest");
+		if (!first || !rest) return;
+		first.textContent = text.slice(0, 1);
+		rest.textContent = text.slice(1);
+	}
+
 	async function typeAndDelete(el: HTMLElement, word: string) {
 		for (let i = 0; i < word.length; i++) {
 			await sleep(APPEND_MS);
-			el.textContent = word.slice(0, i + 1);
+			render(el, word.slice(0, i + 1));
 		}
 		await sleep(DISPLAY_MS);
 		for (let i = word.length; i > 0; i--) {
 			await sleep(REMOVE_MS);
-			el.textContent = word.slice(0, i - 1);
+			render(el, word.slice(0, i - 1));
 		}
 		await sleep(EMPTY_MS);
 	}
@@ -37,10 +47,21 @@ const { subjects } = Astro.props;
 		}
 	}
 
-	for (const el of document.querySelectorAll<HTMLElement>('[data-typewriter]')) {
+	for (const el of document.querySelectorAll<HTMLElement>("[data-typewriter]")) {
 		const raw = el.dataset.subjects;
 		if (!raw) continue;
 		const subjects = JSON.parse(raw) as string[];
 		runLoop(el, subjects);
 	}
 </script>
+
+<style>
+	.first {
+		color: #f092ac;
+		font-size: max(4.5vw, 3rem);
+	}
+
+	.rest {
+		font-size: max(3vw, 2rem);
+	}
+</style>
