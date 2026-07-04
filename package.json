@@ -5,12 +5,12 @@
 	"scripts": {
 		"dev": "astro dev",
 		"build": "astro build",
-		"preview": "wrangler dev",
+		"preview": "wrangler dev --config dist/server/wrangler.json",
 		"check": "astro check && vp check",
 		"test": "vp test",
 		"lint": "vp check",
 		"format": "vp check --fix",
-		"deploy": "astro build && wrangler deploy",
+		"deploy": "astro build && wrangler deploy --config dist/server/wrangler.json",
 		"astro": "astro"
 	},
 	"dependencies": {
