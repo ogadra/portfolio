@@ -12,107 +12,16 @@ permissions:
 jobs:
   astro-dev:
     name: Start astro dev and request home page
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Set up Node.js 24.16.0
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: 24.16.0
-
-      - name: Set up pnpm from packageManager
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-        with:
-          run_install: false
-
-      - name: Resolve pnpm store directory
-        id: pnpm-store
-        shell: bash
-        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache pnpm store from pnpm-lock.yaml
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ steps.pnpm-store.outputs.path }}
-          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-
-
-      - name: Install dependencies with frozen lockfile
-        run: pnpm install --frozen-lockfile
-
-      - name: Start astro dev and expect HTTP 200
-        shell: bash
-        run: |
-          pnpm dev --host 127.0.0.1 --port 4321 > astro-dev.log 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-
-          for _ in {1..30}; do
-            if curl --fail --silent --show-error http://127.0.0.1:4321/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-
-          exit 1
+    uses: ./.github/workflows/_pnpm-task.yml
+    with:
+      task: astro-dev
+    permissions:
+      contents: read
 
   wrangler-dev:
     name: Start wrangler dev and request home page
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Set up Node.js 24.16.0
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: 24.16.0
-
-      - name: Set up pnpm from packageManager
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-        with:
-          run_install: false
-
-      - name: Resolve pnpm store directory
-        id: pnpm-store
-        shell: bash
-        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache pnpm store from pnpm-lock.yaml
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ steps.pnpm-store.outputs.path }}
-          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-
-
-      - name: Install dependencies with frozen lockfile
-        run: pnpm install --frozen-lockfile
-
-      - name: Build Cloudflare Workers output
-        run: pnpm build
-
-      - name: Start wrangler dev and expect HTTP 200
-        shell: bash
-        env:
-          WRANGLER_SEND_METRICS: false
-        run: |
-          pnpm preview --ip 127.0.0.1 --port 8787 > wrangler-dev.log 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-
-          for _ in {1..30}; do
-            if curl --fail --silent --show-error http://127.0.0.1:8787/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-
-          exit 1
+    uses: ./.github/workflows/_pnpm-task.yml
+    with:
+      task: wrangler-dev
+    permissions:
+      contents: read
