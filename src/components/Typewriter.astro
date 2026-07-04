@@ -11,10 +11,9 @@ const { subjects } = Astro.props;
 </p>
 
 <script>
-	const APPEND_MS = 90;
-	const REMOVE_MS = 50;
-	const DISPLAY_MS = 2000;
-	const EMPTY_MS = 100;
+	import { DEFAULT_TIMINGS } from "../lib/typewriter-timing";
+
+	const { appendMs, removeMs, displayMs, emptyMs } = DEFAULT_TIMINGS;
 
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -28,15 +27,15 @@ const { subjects } = Astro.props;
 
 	async function typeAndDelete(el: HTMLElement, word: string) {
 		for (let i = 0; i < word.length; i++) {
-			await sleep(APPEND_MS);
+			await sleep(appendMs);
 			render(el, word.slice(0, i + 1));
 		}
-		await sleep(DISPLAY_MS);
+		await sleep(displayMs);
 		for (let i = word.length; i > 0; i--) {
-			await sleep(REMOVE_MS);
+			await sleep(removeMs);
 			render(el, word.slice(0, i - 1));
 		}
-		await sleep(EMPTY_MS);
+		await sleep(emptyMs);
 	}
 
 	async function runLoop(el: HTMLElement, subjects: readonly string[]) {
