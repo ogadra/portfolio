@@ -70,36 +70,10 @@ jobs:
 
       - name: Start astro dev and expect HTTP 200
         if: inputs.task == 'astro-dev'
-        shell: bash
-        run: |
-          pnpm dev --host 127.0.0.1 --port 4321 > astro-dev.log 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-
-          for _ in {1..30}; do
-            if curl --fail --silent --show-error http://127.0.0.1:4321/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-
-          exit 1
+        run: scripts/wait-for-http.sh http://127.0.0.1:4321/ -- pnpm dev --host 127.0.0.1 --port 4321
 
       - name: Start wrangler dev and expect HTTP 200
         if: inputs.task == 'wrangler-dev'
-        shell: bash
         env:
           WRANGLER_SEND_METRICS: false
-        run: |
-          pnpm preview --ip 127.0.0.1 --port 8787 > wrangler-dev.log 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-
-          for _ in {1..30}; do
-            if curl --fail --silent --show-error http://127.0.0.1:8787/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-
-          exit 1
+        run: scripts/wait-for-http.sh http://127.0.0.1:8787/ -- pnpm preview --ip 127.0.0.1 --port 8787
