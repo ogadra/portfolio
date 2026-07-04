@@ -13,6 +13,7 @@ jobs:
   lint-and-type-check:
     name: Run Astro check and vite-plus lint/format check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository

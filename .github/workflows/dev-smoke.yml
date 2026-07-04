@@ -13,6 +13,7 @@ jobs:
   astro-dev:
     name: Start astro dev and request home page
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -63,6 +64,7 @@ jobs:
   wrangler-dev:
     name: Start wrangler dev and request home page
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository

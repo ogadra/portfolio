@@ -13,6 +13,7 @@ jobs:
   astro-ssr-build:
     name: Build Astro SSR output for Cloudflare Workers
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
