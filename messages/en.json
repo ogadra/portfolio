@@ -1,7 +1,7 @@
 {
-  "$schema": "https://inlang.com/schema/inlang-message-format",
-  "welcome_heading_prefix": "Welcome to ",
-  "welcome_heading_suffix": "!",
-  "welcome_role": "Engineer",
-  "welcome_icon_alt": "ogadra's Icon Image."
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"welcome_heading_prefix": "Welcome to ",
+	"welcome_heading_suffix": "!",
+	"welcome_role": "Engineer",
+	"welcome_icon_alt": "ogadra's Icon Image."
 }
