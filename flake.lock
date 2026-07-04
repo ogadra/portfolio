@@ -18,6 +18,29 @@
         "type": "github"
       }
     },
+    "hk": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783118491,
+        "narHash": "sha256-zesLtCJ9y6S708IwKG3nhfTmVQUWJfT/Dh6KVjaD30s=",
+        "owner": "jdx",
+        "repo": "hk",
+        "rev": "614597e5445e6bf2bcd42630858dfa4d99bc2b2b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jdx",
+        "repo": "hk",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1782723713,
@@ -37,6 +60,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "hk": "hk",
         "nixpkgs": "nixpkgs"
       }
     },

@@ -1,0 +1,22 @@
+amends "package://github.com/jdx/hk/releases/download/v1.49.0/hk@1.49.0#/Config.pkl"
+
+hooks {
+	["pre-commit"] {
+		stash = "git"
+		steps = new Mapping<String, Step> {
+			["check"] {
+				check = "pnpm check"
+			}
+		}
+	}
+	["pre-push"] {
+		steps = new Mapping<String, Step> {
+			["test"] {
+				check = "pnpm test"
+			}
+			["build"] {
+				check = "pnpm build"
+			}
+		}
+	}
+}
