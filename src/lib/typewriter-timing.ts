@@ -1,20 +1,14 @@
-export interface TypewriterTimings {
-	appendMs: number;
-	removeMs: number;
-	displayMs: number;
-	emptyMs: number;
-}
-
-export const DEFAULT_TIMINGS: TypewriterTimings = {
-	appendMs: 90,
-	removeMs: 50,
-	displayMs: 2000,
-	emptyMs: 100
-};
+export const APPEND_MS = 90;
+export const REMOVE_MS = 50;
+export const DISPLAY_MS = 2000;
+export const EMPTY_MS = 100;
 
 export function wordAnimationDuration(
 	wordLength: number,
-	t: TypewriterTimings = DEFAULT_TIMINGS
+	appendMs: number = APPEND_MS,
+	removeMs: number = REMOVE_MS,
+	displayMs: number = DISPLAY_MS,
+	emptyMs: number = EMPTY_MS
 ): number {
-	return t.appendMs * wordLength + t.displayMs + t.removeMs * wordLength + t.emptyMs;
+	return appendMs * wordLength + displayMs + removeMs * wordLength + emptyMs;
 }
