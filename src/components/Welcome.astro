@@ -14,12 +14,18 @@ const subjects = ['Front-End', 'Back-End', 'Infrastructure'];
 			<div class="record">
 				<Typewriter subjects={subjects} />
 				<span class="cursor"></span>
-				<p>{m.welcome_role()}</p>
+				<p class="role">{m.welcome_role()}</p>
 			</div>
 		</div>
 		<div class="right">
 			<div class="jump">
-				<img class="icon" src="/imgs/ogadra.png" alt={m.welcome_icon_alt()} />
+				<img
+					class="icon"
+					src="/imgs/ogadra.png"
+					alt={m.welcome_icon_alt()}
+					width="3000"
+					height="3300"
+				/>
 			</div>
 		</div>
 	</div>
@@ -58,7 +64,7 @@ const subjects = ['Front-End', 'Back-End', 'Infrastructure'];
 		text-align: center;
 	}
 
-	.record :global(p::first-letter) {
+	.role::first-letter {
 		color: #f092ac;
 		font-size: max(4.5vw, 3rem);
 	}
@@ -68,7 +74,7 @@ const subjects = ['Front-End', 'Back-End', 'Infrastructure'];
 	}
 
 	.right {
-		padding: auto;
+		margin: auto;
 		width: min(20vw, 100%);
 		height: min(50vw, 480px);
 	}
