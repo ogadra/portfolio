@@ -1,0 +1,19 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  vitest:
+    name: Run Vitest through vite-plus
+    uses: ./.github/workflows/_pnpm-task.yml
+    with:
+      task: test
+    permissions:
+      contents: read

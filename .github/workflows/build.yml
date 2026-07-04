@@ -1,0 +1,19 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  astro-ssr-build:
+    name: Build Astro SSR output for Cloudflare Workers
+    uses: ./.github/workflows/_pnpm-task.yml
+    with:
+      task: build
+    permissions:
+      contents: read

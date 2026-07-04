@@ -1,0 +1,27 @@
+name: Dev smoke
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  astro-dev:
+    name: Start astro dev and request home page
+    uses: ./.github/workflows/_pnpm-task.yml
+    with:
+      task: astro-dev
+    permissions:
+      contents: read
+
+  wrangler-dev:
+    name: Start wrangler dev and request home page
+    uses: ./.github/workflows/_pnpm-task.yml
+    with:
+      task: wrangler-dev
+    permissions:
+      contents: read

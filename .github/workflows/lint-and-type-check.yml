@@ -1,0 +1,19 @@
+name: Lint and type-check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-type-check:
+    name: Run Astro check and vite-plus lint/format check
+    uses: ./.github/workflows/_pnpm-task.yml
+    with:
+      task: check
+    permissions:
+      contents: read
