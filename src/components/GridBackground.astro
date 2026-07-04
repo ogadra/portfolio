@@ -1,0 +1,76 @@
+---
+import squareUrl from '../assets/square.svg?url';
+---
+
+<div class="layout-root">
+	<div class="grid-root-ground">
+		<div class="grid-ground" style={`background-image: url(${squareUrl});`}></div>
+	</div>
+	<div class="grid-root-wall">
+		<div class="grid-wall" style={`background-image: url(${squareUrl});`}></div>
+	</div>
+	<div class="shadow"></div>
+</div>
+
+<style>
+	.layout-root {
+		position: fixed;
+	}
+
+	.grid-root-ground {
+		z-index: -100;
+		position: absolute;
+		perspective: 150px;
+		perspective-origin: center center;
+		top: 50vh;
+		left: -150vw;
+		width: 400vw;
+		height: max(50%, 50vh);
+		overflow: hidden;
+	}
+
+	.grid-ground {
+		background-size: 500px 100px;
+		display: inline-block;
+		width: 100%;
+		left: -100vw;
+		height: max(100%, 100vh);
+		transform: rotateX(50deg);
+		background-position:
+			0 0,
+			25px 25px;
+	}
+
+	.grid-root-wall {
+		z-index: -110;
+		position: fixed;
+		top: 0;
+		width: 100vw;
+		height: 100%;
+		overflow: hidden;
+		height: max(100%, 100vh);
+	}
+
+	.grid-wall {
+		background-size: 123px;
+		display: inline-block;
+		width: 100vw;
+		height: max(73%, 73vh);
+	}
+
+	.shadow {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: max(100%, 100vh);
+		overflow: hidden;
+		background: linear-gradient(
+			rgba(0, 0, 0, 0) 50%,
+			rgba(34, 34, 34, 1) 70%,
+			rgba(34, 34, 34, 1) 75%,
+			rgba(0, 0, 0, 0)
+		);
+		z-index: -110;
+	}
+</style>
