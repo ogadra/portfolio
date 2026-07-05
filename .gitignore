@@ -15,6 +15,13 @@ result
 # Wrangler
 .wrangler/
 
+# Playwright
+playwright-report/
+test-results/
+.playwright/
+.playwright-cli/
+.agents/skills/playwright-cli/
+
 # build output
 dist/
 # generated types
