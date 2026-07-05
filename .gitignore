@@ -18,6 +18,9 @@ result
 # Playwright
 playwright-report/
 test-results/
+.playwright/
+.playwright-cli/
+.agents/skills/playwright-cli/
 
 # build output
 dist/
