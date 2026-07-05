@@ -6,7 +6,20 @@ hooks {
 		stash = "git"
 		steps = new Mapping<String, Step> {
 			["format-and-lint"] {
-				fix = "pnpm format"
+				glob = List(
+					"*.ts",
+					"*.tsx",
+					"*.mjs",
+					"*.js",
+					"*.astro",
+					"*.json",
+					"*.jsonc",
+					"*.md",
+					"*.css",
+					"*.yaml",
+					"*.yml",
+				)
+				fix = "pnpm exec vp check --fix {{files}}"
 			}
 		}
 	}
