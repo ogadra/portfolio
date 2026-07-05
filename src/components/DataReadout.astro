@@ -14,7 +14,7 @@ const bars = (stats?.dailyEvents ?? Array.from({ length: 14 }, () => 0)).map((co
 ---
 
 <aside class="readout">
-	<div class="block nerv-panel">
+	<div class="block nerv-panel" id="activity">
 		<p class="block-head">
 			<span class="nerv-section-label">GitHub Activity</span>
 			<span class="head-jp">活動記録</span>
@@ -30,7 +30,7 @@ const bars = (stats?.dailyEvents ?? Array.from({ length: 14 }, () => 0)).map((co
 		<p class="wave-caption">EVENTS / DAY — LAST 14D{stats ? '' : ' // LINK OFFLINE'}</p>
 	</div>
 
-	<div class="block nerv-panel">
+	<div class="block nerv-panel" id="languages">
 		<p class="block-head">
 			<span class="nerv-section-label">Language Ratio</span>
 			<span class="head-jp">使用言語</span>
@@ -55,7 +55,7 @@ const bars = (stats?.dailyEvents ?? Array.from({ length: 14 }, () => 0)).map((co
 		}
 	</div>
 
-	<div class="block nerv-panel">
+	<div class="block nerv-panel" id="log">
 		<p class="block-head">
 			<span class="nerv-section-label">Update Log</span>
 			<span class="head-jp">更新履歴</span>
@@ -201,14 +201,16 @@ const bars = (stats?.dailyEvents ?? Array.from({ length: 14 }, () => 0)).map((co
 		white-space: nowrap;
 	}
 	.gauge-meter {
-		height: 6px;
-		background: rgba(255, 153, 0, 0.12);
+		height: 8px;
+		border: 1px solid rgba(255, 153, 0, 0.18);
+		padding: 1px;
 		overflow: hidden;
 	}
+	/* segmented fill: discrete blocks instead of a smooth gradient */
 	.gauge-fill {
 		display: block;
 		height: 100%;
-		background: linear-gradient(90deg, rgba(255, 153, 0, 0.55), var(--nerv-orange));
+		background: repeating-linear-gradient(90deg, var(--nerv-orange) 0 6px, transparent 6px 8px);
 		transform: scaleX(0);
 		transform-origin: left;
 		animation: gauge-draw 0.9s steps(12, end) forwards;

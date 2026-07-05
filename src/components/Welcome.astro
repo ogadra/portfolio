@@ -18,7 +18,7 @@ const stats = await fetchGithubStats();
 	<CommandBar />
 	<main class="hud-main">
 		<DataReadout stats={stats} />
-		<SubjectDisplay />
+		<SubjectDisplay stats={stats} />
 		<MagiRoles languages={stats?.languages ?? []} />
 	</main>
 	<StatusTicker stats={stats} />

@@ -8,39 +8,51 @@ interface Props {
 const { languages } = Astro.props;
 
 const units = [
-	{ code: 'UNIT-01', name: 'FRONT-END', tech: 'TypeScript', fallback: 55 },
-	{ code: 'UNIT-02', name: 'BACK-END', tech: 'Go', fallback: 25 },
-	{ code: 'UNIT-03', name: 'INFRASTRUCTURE', tech: 'HCL', fallback: 15 },
+	{ code: 'UNIT-01', name: 'FRONT-END', tech: 'TypeScript', accent: 'cyan' },
+	{ code: 'UNIT-02', name: 'BACK-END', tech: 'Go', accent: 'orange' },
+	{ code: 'UNIT-03', name: 'INFRASTRUCTURE', tech: 'HCL', accent: 'green' },
 ];
 
 const shareFor = (tech: string) => languages.find((l) => l.name === tech)?.ratio ?? null;
 ---
 
-<aside class="magi">
+<aside class="magi" id="skills">
 	<p class="magi-title">
 		<span class="nerv-section-label">Skill Matrix</span>
 		<span class="magi-jp">主要技術</span>
 	</p>
 	{
-		units.map((u, i) => {
+		units.map((u) => {
 			const share = shareFor(u.tech);
 			return (
-				<div class="unit" style={`--sweep-delay:${i * 1.4}s`}>
+				<div class={`unit ${u.accent}`}>
 					<div class="unit-head">
-						<span class="unit-code">{u.code}</span>
-						<span class="unit-verdict">稼働中</span>
+						<div class="name-box">
+							<span class="reg">Skill Register</span>
+							<p class="unit-name">{u.name}</p>
+						</div>
+						<span class="unit-badge">{u.code}</span>
 					</div>
-					<p class="unit-name">{u.name}</p>
-					<p class="unit-tech">{u.tech}</p>
-					<div class="unit-meter" aria-hidden="true">
-						<span
-							class="unit-fill"
-							style={`width:${share ?? u.fallback}%; animation-delay:${i * 180}ms`}
-						/>
+					<div class="rows">
+						<div class="row">
+							<span>Primary Lang</span>
+							<b>{u.tech}</b>
+						</div>
+						<div class="row">
+							<span>GitHub Share</span>
+							<b class="num">
+								{share === null ? '--' : `${share}%`}
+								{share === null ? <i class="na">N/A</i> : <i class="ok">OK</i>}
+							</b>
+						</div>
+						<div class="row">
+							<span>Status</span>
+							<b class="verdict">稼働中</b>
+						</div>
 					</div>
-					<p class="unit-status">
-						{share === null ? 'GITHUB LANG SHARE // --' : `GITHUB LANG SHARE // ${share}%`}
-					</p>
+					<div class="meter" aria-hidden="true">
+						<span class="meter-fill" style={`width:${share ?? 10}%`} />
+					</div>
 				</div>
 			);
 		})
@@ -74,105 +86,136 @@ const shareFor = (tech: string) => languages.find((l) => l.name === tech)?.ratio
 	}
 
 	.unit {
-		position: relative;
-		overflow: hidden;
+		--accent: var(--nerv-orange);
+		--accent-soft: rgba(255, 153, 0, 0.3);
 		padding: 0.7rem 0.8rem 0.8rem;
-		border: 1px solid var(--nerv-panel-edge);
-		background: linear-gradient(180deg, rgba(20, 20, 20, 0.9), rgba(4, 4, 4, 0.92));
-		clip-path: polygon(
-			0 0,
-			calc(100% - 14px) 0,
-			100% 14px,
-			100% 100%,
-			14px 100%,
-			0 calc(100% - 14px)
-		);
+		border: 1px solid var(--accent-soft);
+		background: rgba(4, 4, 4, 0.92);
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02);
 	}
-	/* periodic scan sweep: coarse steps make it read as a machine refresh */
-	.unit::after {
-		content: '';
-		position: absolute;
-		inset: -40% 0;
-		background: linear-gradient(180deg, transparent, rgba(255, 153, 0, 0.09), transparent);
-		transform: translateY(-100%);
-		animation: unit-sweep 4.2s steps(9, end) infinite;
-		animation-delay: var(--sweep-delay);
-		pointer-events: none;
+	.unit.cyan {
+		--accent: var(--nerv-cyan);
+		--accent-soft: rgba(0, 246, 255, 0.3);
 	}
-	@keyframes unit-sweep {
-		0% {
-			transform: translateY(-100%);
-		}
-		45%,
-		100% {
-			transform: translateY(100%);
-		}
+	.unit.green {
+		--accent: var(--nerv-green);
+		--accent-soft: rgba(0, 255, 0, 0.3);
 	}
 
 	.unit-head {
 		display: flex;
 		justify-content: space-between;
-		align-items: baseline;
+		align-items: stretch;
+		gap: 0.5rem;
+		margin-bottom: 0.6rem;
 	}
-	.unit-code {
+	.name-box {
+		border: 1px solid var(--accent-soft);
+		box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 25%, transparent);
+		padding: 0.35rem 0.6rem;
+	}
+	.reg {
+		display: block;
 		font-family: var(--font-mono);
-		font-size: 0.6rem;
-		letter-spacing: 0.3em;
-		color: var(--nerv-white);
-		opacity: 0.55;
+		font-size: 0.5rem;
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		color: var(--accent);
+		opacity: 0.75;
 	}
-	.unit-verdict {
-		font-family: var(--font-serif-jp);
-		font-weight: 900;
-		font-size: 0.8rem;
-		letter-spacing: 0.3em;
-		color: var(--nerv-green);
-		text-shadow: 0 0 4px rgba(0, 255, 0, 0.4);
-	}
-
 	.unit-name {
 		font-family: var(--font-display);
-		font-size: 1.15rem;
-		letter-spacing: 0.22em;
+		font-size: 1rem;
+		letter-spacing: 0.18em;
 		text-transform: uppercase;
-		color: var(--nerv-orange);
-		margin-top: 0.3rem;
+		color: var(--accent);
+		margin-top: 0.15rem;
 	}
-	.unit-tech {
+	.unit-badge {
+		display: flex;
+		align-items: center;
 		font-family: var(--font-mono);
-		font-size: 0.62rem;
+		font-size: 0.56rem;
 		letter-spacing: 0.2em;
-		color: var(--nerv-white);
-		opacity: 0.75;
-		margin: 0.1rem 0 0.55rem;
+		padding: 0 0.6em;
+		border: 1px solid var(--accent-soft);
+		color: var(--accent);
+		white-space: nowrap;
 	}
 
-	.unit-meter {
-		height: 7px;
-		background: rgba(255, 153, 0, 0.12);
-		overflow: hidden;
+	.rows {
+		display: flex;
+		flex-direction: column;
 	}
-	.unit-fill {
+	.row {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.5rem;
+		padding: 0.35rem 0.1rem;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+	}
+	.row span {
+		font-family: var(--font-mono);
+		font-size: 0.54rem;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--nerv-white);
+		opacity: 0.5;
+	}
+	.row b {
+		font-family: var(--font-mono);
+		font-weight: 400;
+		font-size: 0.66rem;
+		letter-spacing: 0.12em;
+		color: var(--nerv-white);
+	}
+	.row b.num {
+		font-variant-numeric: tabular-nums;
+	}
+	.ok,
+	.na {
+		font-style: normal;
+		font-size: 0.52rem;
+		letter-spacing: 0.1em;
+		padding: 0.1em 0.45em;
+		margin-left: 0.5em;
+	}
+	.ok {
+		background: var(--nerv-green);
+		color: #000;
+	}
+	.na {
+		background: rgba(255, 255, 255, 0.25);
+		color: #000;
+	}
+	.verdict {
+		font-family: var(--font-serif-jp);
+		font-weight: 900;
+		color: var(--nerv-green);
+		text-shadow: 0 0 4px rgba(0, 255, 0, 0.4);
+		letter-spacing: 0.25em;
+		animation: nerv-flicker 7s step-end infinite;
+	}
+
+	/* segmented meter: discrete blocks instead of a smooth fill */
+	.meter {
+		height: 8px;
+		margin-top: 0.55rem;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		padding: 1px;
+	}
+	.meter-fill {
 		display: block;
 		height: 100%;
-		background: linear-gradient(90deg, rgba(255, 153, 0, 0.55), var(--nerv-orange));
+		background: repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 8px);
 		transform: scaleX(0);
 		transform-origin: left;
-		animation: unit-draw 0.9s steps(12, end) forwards;
+		animation: meter-draw 0.9s steps(12, end) forwards;
 	}
-	@keyframes unit-draw {
+	@keyframes meter-draw {
 		to {
 			transform: scaleX(1);
 		}
-	}
-
-	.unit-status {
-		font-family: var(--font-mono);
-		font-size: 0.56rem;
-		letter-spacing: 0.22em;
-		color: var(--nerv-white);
-		opacity: 0.55;
-		margin-top: 0.5rem;
-		font-variant-numeric: tabular-nums;
 	}
 </style>

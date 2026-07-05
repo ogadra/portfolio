@@ -1,5 +1,12 @@
 ---
+import type { GithubStats } from '../lib/github';
 import { m } from '../paraglide/messages.js';
+
+interface Props {
+	stats: GithubStats | null;
+}
+
+const { stats } = Astro.props;
 
 const C = 240;
 const round = (n: number) => Math.round(n * 100) / 100;
@@ -19,7 +26,7 @@ const ticks = Array.from({ length: TICK_COUNT }, (_, i) => {
 });
 ---
 
-<section class="subject">
+<section class="subject" id="subject">
 	<div class="stage">
 		<svg class="reticle" viewBox="0 0 480 480" aria-hidden="true">
 			<g class="ring-outer">
@@ -99,6 +106,20 @@ const ticks = Array.from({ length: TICK_COUNT }, (_, i) => {
 		</p>
 		<h1>OGADRA</h1>
 		<p class="classification">CLASSIFICATION // SOFTWARE ENGINEER</p>
+		<div class="stat-boxes" aria-hidden="true">
+			<div class="stat orange">
+				<span class="stat-label">Public Repos</span>
+				<span class="stat-value">{stats?.publicRepos ?? '--'}</span>
+			</div>
+			<div class="stat cyan">
+				<span class="stat-label">Followers</span>
+				<span class="stat-value">{stats?.followers ?? '--'}</span>
+			</div>
+			<div class="stat green">
+				<span class="stat-label">Status</span>
+				<span class="stat-value">{stats ? 'NOMINAL' : 'OFFLINE'}</span>
+			</div>
+		</div>
 	</div>
 </section>
 
@@ -215,5 +236,54 @@ const ticks = Array.from({ length: TICK_COUNT }, (_, i) => {
 		color: var(--nerv-white);
 		opacity: 0.65;
 		margin-top: 0.4rem;
+	}
+
+	.stat-boxes {
+		display: flex;
+		justify-content: center;
+		gap: 0.6rem;
+		margin-top: 0.9rem;
+	}
+	.stat {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		padding: 0.5rem 0.8rem;
+		background: rgba(0, 0, 0, 0.6);
+		min-width: 6.4rem;
+		text-align: left;
+	}
+	.stat-label {
+		font-family: var(--font-mono);
+		font-size: 0.52rem;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--nerv-white);
+		opacity: 0.45;
+	}
+	.stat-value {
+		font-family: var(--font-display);
+		font-size: 1rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		font-variant-numeric: tabular-nums;
+	}
+	.orange {
+		border: 1px solid rgba(255, 153, 0, 0.25);
+	}
+	.orange .stat-value {
+		color: var(--nerv-orange);
+	}
+	.cyan {
+		border: 1px solid rgba(0, 246, 255, 0.25);
+	}
+	.cyan .stat-value {
+		color: var(--nerv-cyan);
+	}
+	.green {
+		border: 1px solid rgba(0, 255, 0, 0.25);
+	}
+	.green .stat-value {
+		color: var(--nerv-green);
 	}
 </style>
