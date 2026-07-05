@@ -1,38 +1,53 @@
-# Astro Starter Kit: Minimal
+# ogadra.com portfolio
 
-```sh
-pnpm create astro@latest -- --template minimal
-```
+Astro SSR portfolio deployed to Cloudflare Workers.
 
 ## Project Structure
 
 ```text
 /
+├── messages/
 ├── public/
 ├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+├── tests/
+│   ├── e2e/
+│   └── typewriterTiming.test.ts
+├── astro.config.mjs
+├── playwright.config.ts
+└── wrangler.jsonc
 ```
-
-Astro maps every `.astro` or `.md` file in `src/pages/` to a route based on its file name.
-
-Put Astro/React/Vue/Svelte/Preact components in `src/components/`. Put static assets like images in `public/`.
 
 ## Commands
 
 Run these from the project root:
 
-| Command                | Action                                           |
-| :--------------------- | :----------------------------------------------- |
-| `pnpm install`         | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+| Command                             | Action                                                   |
+| :---------------------------------- | :------------------------------------------------------- |
+| `pnpm install`                      | Install dependencies                                     |
+| `pnpm dev`                          | Start the Astro dev server at `localhost:4321`           |
+| `pnpm build`                        | Build the Cloudflare Workers SSR output to `./dist/`     |
+| `pnpm preview`                      | Preview the built Worker locally with Wrangler           |
+| `pnpm check`                        | Run Astro checks and vite-plus format/lint checks        |
+| `pnpm test`                         | Run unit tests                                           |
+| `pnpm test:e2e`                     | Build, preview, and run Playwright E2E tests in Chromium |
+| `pnpm exec playwright install`      | Install Playwright browsers for local E2E runs           |
+| `pnpm exec playwright install-deps` | Install OS packages needed by Playwright browsers        |
+| `pnpm deploy`                       | Build and deploy with Wrangler                           |
 
-## References
+## E2E
 
-- [Astro docs](https://docs.astro.build)
-- [Astro Discord](https://astro.build/chat)
+The E2E suite uses Playwright against the production-like Wrangler preview. The
+Playwright config starts `pnpm build && pnpm preview` automatically unless
+`PLAYWRIGHT_BASE_URL` is set.
+
+```sh
+pnpm exec playwright install chromium
+pnpm test:e2e
+```
+
+If the downloaded Chromium cannot run in the local environment, point Playwright
+at an existing Chrome-compatible browser:
+
+```sh
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="$(which google-chrome)" pnpm test:e2e
+```
