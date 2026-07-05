@@ -26,9 +26,9 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            playwright-${{ runner.os }}-
+            playwright-
 
       - name: Install Playwright browser and dependencies
         if: steps.playwright-cache.outputs.cache-hit != 'true'
