@@ -23,8 +23,12 @@
             pkgs.wrangler
             pkgs.git
             pkgs.curl
+            pkgs.chromium
             hk.packages.${system}.default
           ];
+
+          PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
         };
       });
 }

@@ -8,6 +8,7 @@
 		"preview": "wrangler dev --config dist/server/wrangler.json",
 		"check": "astro check && vp check",
 		"test": "vp test",
+		"test:e2e": "playwright test",
 		"lint": "vp check",
 		"format": "vp check --fix",
 		"deploy": "astro build && wrangler deploy --config dist/server/wrangler.json",
@@ -20,6 +21,7 @@
 		"astro": "^7.0.4"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.61.1",
 		"typescript": "^6.0.3",
 		"vite-plus": "^0.2.1",
 		"vitest": "^4.1.9",

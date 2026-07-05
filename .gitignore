@@ -15,6 +15,10 @@ result
 # Wrangler
 .wrangler/
 
+# Playwright
+playwright-report/
+test-results/
+
 # build output
 dist/
 # generated types
