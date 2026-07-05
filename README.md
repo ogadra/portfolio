@@ -30,7 +30,7 @@ Run these from the project root:
 | `pnpm check`                        | Run Astro checks and vite-plus format/lint checks        |
 | `pnpm test`                         | Run unit tests                                           |
 | `pnpm test:e2e`                     | Build, preview, and run Playwright E2E tests in Chromium |
-| `pnpm exec playwright install`      | Install Playwright browsers for local E2E runs           |
+| `pnpm exec playwright install`      | Install Playwright browsers outside the Nix dev shell    |
 | `pnpm exec playwright install-deps` | Install OS packages needed by Playwright browsers        |
 | `pnpm deploy`                       | Build and deploy with Wrangler                           |
 
@@ -39,6 +39,15 @@ Run these from the project root:
 The E2E suite uses Playwright against the production-like Wrangler preview. The
 Playwright config starts `pnpm build && pnpm preview` automatically unless
 `PLAYWRIGHT_BASE_URL` is set.
+
+The Nix dev shell provides Chromium and configures Playwright to use it:
+
+```sh
+nix develop
+pnpm test:e2e
+```
+
+Outside the Nix dev shell, install Playwright's browser bundle first:
 
 ```sh
 pnpm exec playwright install chromium
