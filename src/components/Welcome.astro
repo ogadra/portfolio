@@ -1,4 +1,5 @@
 ---
+import { env } from 'cloudflare:workers';
 import { fetchGithubStats } from '../lib/github';
 import CommandBar from './CommandBar.astro';
 import DataReadout from './DataReadout.astro';
@@ -6,7 +7,7 @@ import MagiRoles from './MagiRoles.astro';
 import StatusTicker from './StatusTicker.astro';
 import SubjectDisplay from './SubjectDisplay.astro';
 
-const stats = await fetchGithubStats();
+const stats = await fetchGithubStats(env);
 ---
 
 <div class="hud-root">
