@@ -9,7 +9,7 @@ export default defineConfig({
 	fullyParallel: true,
 	forbidOnly: Boolean(process.env.CI),
 	retries: process.env.CI ? 2 : 0,
-	workers: process.env.CI ? 1 : undefined,
+	workers: process.env.CI ? '50%' : undefined,
 	reporter: process.env.CI
 		? [['github'], ['html', { open: 'never' }]]
 		: [['list'], ['html', { open: 'never' }]],
@@ -31,7 +31,7 @@ export default defineConfig({
 	webServer: process.env.PLAYWRIGHT_BASE_URL
 		? undefined
 		: {
-				command: `pnpm build && pnpm preview --ip 127.0.0.1 --port ${port}`,
+				command: `pnpm preview --ip 127.0.0.1 --port ${port}`,
 				url: baseURL,
 				reuseExistingServer: !process.env.CI,
 				timeout: 120_000,
