@@ -12,8 +12,14 @@ permissions:
 jobs:
   astro-ssr-build:
     name: Build Astro SSR output for Cloudflare Workers
-    uses: ./.github/workflows/_pnpm-task.yml
-    with:
-      task: build
-    permissions:
-      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Node.js and pnpm
+        uses: ./.github/actions/setup
+
+      - name: Build
+        run: pnpm build
