@@ -1,0 +1,175 @@
+<header class="command-bar">
+	<div class="brand">
+		<svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+			<polygon
+				points="16,2 28.1,9 28.1,23 16,30 3.9,23 3.9,9"
+				fill="none"
+				stroke="var(--nerv-orange)"
+				stroke-width="1.5"></polygon>
+			<polygon points="16,9 22.1,20 9.9,20" fill="var(--nerv-orange)"></polygon>
+		</svg>
+		<div class="brand-text">
+			<span class="brand-name">OGADRA</span>
+			<span class="brand-sub">個人サイト</span>
+		</div>
+	</div>
+	<a class="site-link" href="/">ogadra.com</a>
+	<div class="meta">
+		<nav class="links" aria-label="External links">
+			<a href="https://github.com/ogadra" rel="me">GitHub</a>
+			<a href="https://twitter.com/const_myself" rel="me">Twitter</a>
+		</nav>
+		<span class="clock" aria-hidden="true">
+			<span data-hud-date>----.--.--</span>
+			<time data-hud-time>--:--:--</time>
+		</span>
+		<span class="sys-status" aria-hidden="true">SYS<b>NOMINAL</b></span>
+	</div>
+</header>
+
+<script>
+	import { formatHudDate, formatHudTime } from '../lib/hudClock';
+
+	const dateEl = document.querySelector('[data-hud-date]');
+	const timeEl = document.querySelector('[data-hud-time]');
+	const tick = () => {
+		const now = new Date();
+		if (dateEl) dateEl.textContent = formatHudDate(now);
+		if (timeEl) timeEl.textContent = formatHudTime(now);
+	};
+	tick();
+	setInterval(tick, 1000);
+</script>
+
+<style>
+	.command-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.5rem 0.9rem;
+		border: 1px solid var(--nerv-panel-edge);
+		border-left: 3px solid var(--nerv-orange);
+		background: linear-gradient(180deg, rgba(20, 20, 20, 0.9), rgba(4, 4, 4, 0.92));
+	}
+
+	.brand {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+	}
+	.brand-mark {
+		width: 30px;
+		height: 30px;
+		filter: drop-shadow(0 0 3px rgba(255, 153, 0, 0.5));
+	}
+	.brand-text {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.15;
+	}
+	.brand-name {
+		font-family: var(--font-display);
+		font-size: 1rem;
+		letter-spacing: 0.35em;
+		color: var(--nerv-orange);
+	}
+	.brand-sub {
+		font-family: var(--font-serif-jp);
+		font-weight: 900;
+		font-size: 0.62rem;
+		letter-spacing: 0.55em;
+		color: var(--nerv-white);
+		opacity: 0.6;
+	}
+
+	.site-link {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.3em;
+		color: var(--nerv-white);
+		text-decoration: none;
+		opacity: 0.75;
+		border-bottom: 1px solid var(--nerv-line-strong);
+		padding-bottom: 2px;
+	}
+	.site-link:hover,
+	.site-link:focus-visible {
+		color: var(--nerv-orange);
+		border-bottom-color: var(--nerv-orange);
+		opacity: 1;
+	}
+	.site-link:focus-visible {
+		outline: 2px solid var(--nerv-orange);
+		outline-offset: 4px;
+	}
+
+	.meta {
+		display: flex;
+		align-items: center;
+		gap: 1.1rem;
+	}
+
+	.links {
+		display: flex;
+		gap: 0.8rem;
+	}
+	.links a {
+		font-family: var(--font-display);
+		font-size: 0.62rem;
+		letter-spacing: 0.25em;
+		text-transform: uppercase;
+		text-decoration: none;
+		color: var(--nerv-orange);
+		border: 1px solid var(--nerv-line-strong);
+		padding: 0.25em 0.7em;
+	}
+	.links a:hover,
+	.links a:focus-visible {
+		background: var(--nerv-orange);
+		color: var(--nerv-black);
+	}
+	.links a:focus-visible {
+		outline: 2px solid var(--nerv-orange);
+		outline-offset: 3px;
+	}
+
+	.clock {
+		display: flex;
+		gap: 0.7rem;
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.15em;
+		font-variant-numeric: tabular-nums;
+		color: var(--nerv-white);
+		opacity: 0.8;
+	}
+	.clock time {
+		color: var(--nerv-orange);
+		opacity: 1;
+	}
+	.sys-status {
+		display: flex;
+		align-items: baseline;
+		gap: 0.45em;
+		font-family: var(--font-display);
+		font-size: 0.62rem;
+		letter-spacing: 0.25em;
+		color: var(--nerv-white);
+		opacity: 0.6;
+	}
+	.sys-status b {
+		font-weight: 500;
+		color: var(--nerv-green);
+		opacity: 1;
+		animation: nerv-flicker 5s step-end infinite;
+	}
+
+	@media (max-width: 900px) {
+		.site-link,
+		.clock span[data-hud-date],
+		.sys-status {
+			display: none;
+		}
+	}
+</style>

@@ -1,0 +1,219 @@
+---
+import { m } from '../paraglide/messages.js';
+
+const C = 240;
+const round = (n: number) => Math.round(n * 100) / 100;
+const TICK_COUNT = 60;
+const ticks = Array.from({ length: TICK_COUNT }, (_, i) => {
+	const angle = (i * Math.PI * 2) / TICK_COUNT;
+	const isMain = i % 5 === 0;
+	const r1 = isMain ? 216 : 222;
+	const r2 = 228;
+	return {
+		x1: round(C + r1 * Math.cos(angle)),
+		y1: round(C + r1 * Math.sin(angle)),
+		x2: round(C + r2 * Math.cos(angle)),
+		y2: round(C + r2 * Math.sin(angle)),
+		isMain,
+	};
+});
+---
+
+<section class="subject">
+	<div class="stage">
+		<svg class="reticle" viewBox="0 0 480 480" aria-hidden="true">
+			<g class="ring-outer">
+				<circle
+					cx="240"
+					cy="240"
+					r="230"
+					fill="none"
+					stroke="var(--nerv-orange)"
+					stroke-width="1.5"
+					stroke-dasharray="10 6"
+					opacity="0.8"></circle>
+			</g>
+			<g stroke="var(--nerv-orange)" stroke-width="1">
+				{
+					ticks.map((t) => (
+						<line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} opacity={t.isMain ? 0.8 : 0.35} />
+					))
+				}
+			</g>
+			<circle
+				cx="240"
+				cy="240"
+				r="206"
+				fill="none"
+				stroke="var(--nerv-orange)"
+				stroke-width="1"
+				opacity="0.25"></circle>
+			<g class="ring-inner">
+				<circle
+					cx="240"
+					cy="240"
+					r="150"
+					fill="none"
+					stroke="var(--nerv-orange)"
+					stroke-width="1"
+					stroke-dasharray="4 10"
+					opacity="0.55"></circle>
+			</g>
+			<g stroke="var(--nerv-orange)" stroke-width="1" opacity="0.5">
+				<line x1="240" y1="14" x2="240" y2="72"></line>
+				<line x1="240" y1="408" x2="240" y2="466"></line>
+				<line x1="14" y1="240" x2="72" y2="240"></line>
+				<line x1="408" y1="240" x2="466" y2="240"></line>
+			</g>
+			<g fill="var(--nerv-orange)" opacity="0.9">
+				<polygon points="240,28 245,34 240,40 235,34"></polygon>
+				<polygon points="240,440 245,446 240,452 235,446"></polygon>
+				<polygon points="28,234 34,240 28,246 22,240"></polygon>
+				<polygon points="446,234 452,240 446,246 440,240"></polygon>
+			</g>
+			<g
+				class="ring-labels"
+				fill="var(--nerv-orange)"
+				font-size="11"
+				letter-spacing="2"
+				opacity="0.7"
+			>
+				<text x="252" y="36">000</text>
+				<text x="444" y="230">090</text>
+				<text x="252" y="456">180</text>
+				<text x="14" y="230">270</text>
+			</g>
+		</svg>
+		<img
+			class="icon"
+			src="/imgs/ogadra.png"
+			alt={m.welcome_icon_alt()}
+			width="3000"
+			height="3300"
+		/>
+	</div>
+	<div class="identity">
+		<p class="eyebrow" aria-hidden="true">
+			<span class="eyebrow-en">Subject Identification</span>
+			<span class="eyebrow-jp">開発者識別</span>
+		</p>
+		<h1>OGADRA</h1>
+		<p class="classification">CLASSIFICATION // SOFTWARE ENGINEER</p>
+	</div>
+</section>
+
+<style>
+	.subject {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: clamp(0.5rem, 2vh, 1.5rem);
+		min-width: 0;
+	}
+
+	.stage {
+		position: relative;
+		width: min(58vmin, 440px);
+		aspect-ratio: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.reticle {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		filter: drop-shadow(0 0 6px rgba(255, 153, 0, 0.25));
+	}
+	.ring-labels {
+		font-family: var(--font-mono);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.ring-outer {
+		transform-origin: 50% 50%;
+		animation: spin 40s linear infinite;
+	}
+	.ring-inner {
+		transform-origin: 50% 50%;
+		animation: spin-reverse 24s linear infinite;
+	}
+	@keyframes spin {
+		to {
+			transform: rotate(1turn);
+		}
+	}
+	@keyframes spin-reverse {
+		to {
+			transform: rotate(-1turn);
+		}
+	}
+
+	.icon {
+		width: 52%;
+		height: auto;
+		object-fit: contain;
+		filter: drop-shadow(0 0 14px rgba(255, 153, 0, 0.35));
+		animation: hover-float 6s ease-in-out infinite;
+	}
+	@keyframes hover-float {
+		0%,
+		100% {
+			transform: translateY(-4px);
+		}
+		50% {
+			transform: translateY(6px);
+		}
+	}
+
+	.identity {
+		text-align: center;
+	}
+	.eyebrow {
+		display: flex;
+		align-items: baseline;
+		justify-content: center;
+		gap: 0.9em;
+	}
+	.eyebrow-en {
+		font-family: var(--font-display);
+		font-size: 0.68rem;
+		letter-spacing: 0.45em;
+		text-transform: uppercase;
+		color: var(--nerv-orange);
+		opacity: 0.85;
+	}
+	.eyebrow-jp {
+		font-family: var(--font-serif-jp);
+		font-weight: 900;
+		font-size: 0.68rem;
+		letter-spacing: 0.4em;
+		color: var(--nerv-white);
+		opacity: 0.6;
+	}
+
+	h1 {
+		font-family: var(--font-display);
+		font-weight: 500;
+		font-size: clamp(2.6rem, 7vw, 4.6rem);
+		line-height: 1.05;
+		letter-spacing: 0.28em;
+		margin-right: -0.28em;
+		text-transform: uppercase;
+		color: var(--nerv-orange);
+		text-shadow: 0 0 6px rgba(255, 153, 0, 0.45);
+	}
+
+	.classification {
+		font-family: var(--font-mono);
+		font-size: 0.66rem;
+		letter-spacing: 0.32em;
+		color: var(--nerv-white);
+		opacity: 0.65;
+		margin-top: 0.4rem;
+	}
+</style>

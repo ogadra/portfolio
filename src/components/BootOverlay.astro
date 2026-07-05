@@ -1,0 +1,228 @@
+---
+const TICK_COUNT = 24;
+const round = (n: number) => Math.round(n * 100) / 100;
+const ticks = Array.from({ length: TICK_COUNT }, (_, i) => {
+	const angle = (i * Math.PI * 2) / TICK_COUNT;
+	const isMain = i % 6 === 0;
+	const r1 = isMain ? 76 : 82;
+	const r2 = 88;
+	return {
+		x1: round(100 + r1 * Math.cos(angle)),
+		y1: round(100 + r1 * Math.sin(angle)),
+		x2: round(100 + r2 * Math.cos(angle)),
+		y2: round(100 + r2 * Math.sin(angle)),
+	};
+});
+---
+
+<div id="boot" aria-hidden="true">
+	<span class="boot-corner tl"></span>
+	<span class="boot-corner tr"></span>
+	<span class="boot-corner bl"></span>
+	<span class="boot-corner br"></span>
+	<div class="boot-inner">
+		<svg class="reticle" viewBox="0 0 200 200" width="200" height="200">
+			<circle
+				class="ring-outer"
+				cx="100"
+				cy="100"
+				r="94"
+				fill="none"
+				stroke="#ff9900"
+				stroke-width="1.5"
+				stroke-dasharray="8 4"></circle>
+			<circle
+				class="ring-inner"
+				cx="100"
+				cy="100"
+				r="64"
+				fill="none"
+				stroke="#ff9900"
+				stroke-width="1"></circle>
+			<g class="ticks" stroke="#ff9900" stroke-width="1">
+				{ticks.map((t) => <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} />)}
+			</g>
+			<g class="crosshair" stroke="#ff9900" stroke-width="1">
+				<line x1="100" y1="72" x2="100" y2="128"></line>
+				<line x1="72" y1="100" x2="128" y2="100"></line>
+			</g>
+		</svg>
+		<div class="boot-progress"><span class="boot-progress-fill"></span></div>
+		<p class="boot-status">SYSTEM STARTUP</p>
+		<ul class="boot-log">
+			<li style="animation-delay: 0.15s">GITHUB LINK ........... OK</li>
+			<li style="animation-delay: 0.4s">FONT CACHE ............ OK</li>
+			<li style="animation-delay: 0.65s">HUD RENDER ............ OK</li>
+		</ul>
+	</div>
+</div>
+
+<script is:inline>
+	(() => {
+		const el = document.getElementById('boot');
+		if (!el) return;
+		const remove = () => el.remove();
+		el.addEventListener('animationend', (e) => {
+			if (e.target === el && e.animationName === 'boot-out') remove();
+		});
+		setTimeout(remove, 2500);
+	})();
+</script>
+
+<style is:global>
+	#boot .boot-inner {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.5rem;
+	}
+
+	#boot .reticle {
+		overflow: visible;
+		filter: drop-shadow(0 0 4px rgba(255, 153, 0, 0.4));
+	}
+
+	/* every element switches on in discrete jumps: no smooth easing anywhere */
+	#boot .ring-outer {
+		opacity: 0;
+		transform-origin: 100px 100px;
+		animation:
+			boot-flicker-in 0.4s step-end 0.1s forwards,
+			boot-rotate 6s linear infinite;
+	}
+
+	#boot .ring-inner {
+		stroke-dasharray: 402.2;
+		stroke-dashoffset: 402.2;
+		animation: boot-draw 0.5s steps(9, end) forwards;
+	}
+
+	#boot .ticks {
+		opacity: 0;
+		animation: boot-flicker-in 0.4s step-end 0.25s forwards;
+	}
+
+	#boot .crosshair {
+		opacity: 0;
+		animation: boot-flicker-in 0.3s step-end 0.45s forwards;
+	}
+
+	#boot .boot-progress {
+		width: 220px;
+		height: 2px;
+		background: rgba(255, 153, 0, 0.12);
+		overflow: hidden;
+	}
+
+	#boot .boot-progress-fill {
+		display: block;
+		width: 100%;
+		height: 100%;
+		background: #ff9900;
+		transform: scaleX(0);
+		transform-origin: left;
+		animation: boot-progress 0.9s steps(12, end) 0.1s forwards;
+	}
+
+	#boot .boot-status {
+		font-family: 'Monaspace', 'Courier New', monospace;
+		font-size: 0.65rem;
+		letter-spacing: 0.3em;
+		color: #ff9900;
+		animation: boot-blink 0.8s step-end infinite;
+	}
+
+	#boot .boot-log {
+		list-style: none;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+	#boot .boot-log li {
+		font-family: 'Monaspace', 'Courier New', monospace;
+		font-size: 0.58rem;
+		letter-spacing: 0.2em;
+		color: #e3ddd4;
+		opacity: 0;
+		animation: boot-flicker-in 0.25s step-end forwards;
+	}
+
+	#boot .boot-corner {
+		position: absolute;
+		width: 28px;
+		height: 28px;
+		border: 0 solid #ff9900;
+		opacity: 0;
+		animation: boot-flicker-in 0.3s step-end forwards;
+	}
+	#boot .tl {
+		top: 12px;
+		left: 12px;
+		border-top-width: 2px;
+		border-left-width: 2px;
+		animation-delay: 0.1s;
+	}
+	#boot .tr {
+		top: 12px;
+		right: 12px;
+		border-top-width: 2px;
+		border-right-width: 2px;
+		animation-delay: 0.2s;
+	}
+	#boot .br {
+		bottom: 12px;
+		right: 12px;
+		border-bottom-width: 2px;
+		border-right-width: 2px;
+		animation-delay: 0.3s;
+	}
+	#boot .bl {
+		bottom: 12px;
+		left: 12px;
+		border-bottom-width: 2px;
+		border-left-width: 2px;
+		animation-delay: 0.4s;
+	}
+
+	@keyframes boot-flicker-in {
+		0% {
+			opacity: 0;
+		}
+		35% {
+			opacity: 0.9;
+		}
+		50% {
+			opacity: 0.2;
+		}
+		65%,
+		100% {
+			opacity: 0.85;
+		}
+	}
+	@keyframes boot-rotate {
+		to {
+			transform: rotate(1turn);
+		}
+	}
+	@keyframes boot-draw {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+	@keyframes boot-progress {
+		to {
+			transform: scaleX(1);
+		}
+	}
+	@keyframes boot-blink {
+		0%,
+		60% {
+			opacity: 1;
+		}
+		61%,
+		100% {
+			opacity: 0.25;
+		}
+	}
+</style>

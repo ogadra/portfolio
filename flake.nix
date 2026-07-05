@@ -30,6 +30,9 @@
           PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
           PWTEST_CLI_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
+
+          # workerd (astro dev / wrangler dev) needs an explicit CA bundle for outbound TLS
+          SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
         };
       });
 }

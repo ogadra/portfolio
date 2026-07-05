@@ -1,150 +1,95 @@
 ---
-import { m } from '../paraglide/messages.js';
-import Typewriter from './Typewriter.astro';
+import { fetchGithubStats } from '../lib/github';
+import CommandBar from './CommandBar.astro';
+import DataReadout from './DataReadout.astro';
+import MagiRoles from './MagiRoles.astro';
+import StatusTicker from './StatusTicker.astro';
+import SubjectDisplay from './SubjectDisplay.astro';
 
-const subjects = ['Front-End', 'Back-End', 'Infrastructure'];
+const stats = await fetchGithubStats();
 ---
 
-<div class="welcome-root">
-	<h1>
-		{m.welcome_heading_prefix()}<a href="/">ogadra.com</a>{m.welcome_heading_suffix()}
-	</h1>
-	<div class="table">
-		<div class="left">
-			<div class="record">
-				<Typewriter subjects={subjects} />
-				<span class="cursor"></span>
-				<p class="role">{m.welcome_role()}</p>
-			</div>
-		</div>
-		<div class="right">
-			<div class="jump">
-				<img
-					class="icon"
-					src="/imgs/ogadra.png"
-					alt={m.welcome_icon_alt()}
-					width="3000"
-					height="3300"
-				/>
-			</div>
-		</div>
-	</div>
+<div class="hud-root">
+	<span class="corner tl" aria-hidden="true"></span>
+	<span class="corner tr" aria-hidden="true"></span>
+	<span class="corner bl" aria-hidden="true"></span>
+	<span class="corner br" aria-hidden="true"></span>
+
+	<CommandBar />
+	<main class="hud-main">
+		<DataReadout stats={stats} />
+		<SubjectDisplay />
+		<MagiRoles languages={stats?.languages ?? []} />
+	</main>
+	<StatusTicker stats={stats} />
 </div>
 
 <style>
-	.welcome-root {
-		flex-direction: column;
-		height: 100vh;
+	.hud-root {
 		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		min-height: 100dvh;
+		padding: 1.4rem;
+		position: relative;
 	}
 
-	h1 {
-		font-size: 5vw;
-		text-align: center;
-		width: 100vw;
-		margin: 10vh 0;
+	.corner {
+		position: absolute;
+		width: 26px;
+		height: 26px;
+		border: 0 solid var(--nerv-orange);
+		opacity: 0.7;
+		pointer-events: none;
 	}
-	h1 > a {
-		font-size: 1em;
+	.tl {
+		top: 8px;
+		left: 8px;
+		border-top-width: 2px;
+		border-left-width: 2px;
 	}
-
-	.table {
-		display: table;
-		width: 100%;
-		margin: 0 auto;
+	.tr {
+		top: 8px;
+		right: 8px;
+		border-top-width: 2px;
+		border-right-width: 2px;
 	}
-	.left {
-		display: table-cell;
-		width: 60%;
-		vertical-align: middle;
+	.bl {
+		bottom: 8px;
+		left: 8px;
+		border-bottom-width: 2px;
+		border-left-width: 2px;
 	}
-	.record {
-		text-align: center;
-		margin: 8%;
-	}
-
-	.record :global(p),
-	.record .cursor {
-		font-size: max(3vw, 2rem);
-		text-align: center;
-	}
-
-	.role::first-letter {
-		color: #f092ac;
-		font-size: max(4.5vw, 3rem);
+	.br {
+		bottom: 8px;
+		right: 8px;
+		border-bottom-width: 2px;
+		border-right-width: 2px;
 	}
 
-	.right {
-		margin: auto;
-		width: min(20vw, 100%);
-		height: min(50vw, 480px);
+	.hud-main {
+		flex: 1;
+		display: grid;
+		grid-template-columns: 230px minmax(0, 1fr) 250px;
+		gap: 1rem;
+		align-items: center;
+	}
+	.hud-main > :global(.readout),
+	.hud-main > :global(.magi) {
+		align-self: stretch;
+		justify-content: center;
 	}
 
-	@keyframes blink {
-		0% {
-			opacity: 0;
+	@media (max-width: 1000px) {
+		.hud-root {
+			padding: 1rem;
 		}
-		5% {
-			opacity: 1;
+		.hud-main {
+			grid-template-columns: 1fr;
+			gap: 1.25rem;
 		}
-		50% {
-			opacity: 1;
+		.hud-main > :global(.subject) {
+			order: -1;
 		}
-		55% {
-			opacity: 0;
-		}
-	}
-
-	.record :global(p) {
-		display: inline-block;
-	}
-
-	.cursor {
-		display: inline;
-		padding-left: 0.2em;
-		background-color: white;
-		opacity: 0;
-		margin-top: 0.1em;
-		margin-left: 0.15em;
-		animation: blink 1s ease-in infinite;
-	}
-
-	@keyframes rotating {
-		0% {
-			transform: rotateY(0);
-		}
-		80% {
-			transform: rotateY(1turn);
-		}
-		100% {
-			transform: rotateY(1turn);
-		}
-	}
-	@keyframes jumping {
-		0% {
-			transform: translateY(0px);
-		}
-		20% {
-			transform: translateY(0px);
-		}
-		50% {
-			transform: translateY(-30px);
-		}
-		80% {
-			transform: translateY(0px);
-		}
-	}
-
-	.icon {
-		width: 100%;
-		height: 100%;
-		animation: rotating 1.5s ease-in-out infinite;
-		object-fit: contain;
-		margin: auto;
-	}
-	.jump {
-		animation: jumping 1.5s ease-in-out infinite;
-		width: 100%;
-		height: 100%;
 	}
 </style>
