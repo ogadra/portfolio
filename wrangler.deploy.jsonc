@@ -22,5 +22,8 @@
 		{
 			"binding": "SESSION",
 		},
+		{
+			"binding": "GITHUB_CACHE",
+		},
 	],
 }
