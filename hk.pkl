@@ -1,0 +1,26 @@
+amends "package://github.com/jdx/hk/releases/download/v1.49.0/hk@1.49.0#/Config.pkl"
+
+hooks {
+	["pre-commit"] {
+		fix = true
+		stash = "git"
+		steps = new Mapping<String, Step> {
+			["format-and-lint"] {
+				glob = List(
+					"*.ts",
+					"*.tsx",
+					"*.mjs",
+					"*.js",
+					"*.astro",
+					"*.json",
+					"*.jsonc",
+					"*.md",
+					"*.css",
+					"*.yaml",
+					"*.yml",
+				)
+				fix = "pnpm exec vp check --fix {{files}}"
+			}
+		}
+	}
+}
