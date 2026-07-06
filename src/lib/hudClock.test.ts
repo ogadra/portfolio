@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatHudDate, formatHudTime } from '../src/lib/hudClock';
+import { formatHudDate, formatHudTime } from './hudClock';
 
 describe('hudClock', () => {
 	it('formats dates as YYYY.MM.DD', () => {

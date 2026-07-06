@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchGithubStats, type GithubEnv, type KVStore } from '../src/lib/github';
+import { fetchGithubStats, type GithubEnv, type KVStore } from './github';
 
 const memoryKv = (): KVStore & { store: Map<string, string> } => {
 	const store = new Map<string, string>();

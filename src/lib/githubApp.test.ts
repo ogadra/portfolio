@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { KVStore } from '../src/lib/github';
-import { buildJwtClaims, getInstallationToken } from '../src/lib/githubApp';
+import type { KVStore } from './github';
+import { buildJwtClaims, getInstallationToken } from './githubApp';
 
 const memoryKv = (): KVStore & { store: Map<string, string> } => {
 	const store = new Map<string, string>();

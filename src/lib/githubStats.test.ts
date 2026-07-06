@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bucketByDay, eventLabel, languageRatio } from '../src/lib/githubStats';
+import { bucketByDay, eventLabel, languageRatio } from './githubStats';
 
 describe('languageRatio', () => {
 	it('returns the top languages with rounded percentages', () => {
