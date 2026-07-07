@@ -68,17 +68,23 @@ const BLIPS = [
 		}
 	}
 
-	/* concentric range rings, centered on the viewport */
+	/* concentric range rings — kept to an outer band so they don't collide with
+	   the subject reticle in the centre */
 	.rings {
 		position: absolute;
 		inset: -20%;
 		background: repeating-radial-gradient(
 			circle at 50% 50%,
 			transparent 0 118px,
-			rgba(255, 153, 0, 0.05) 118px 120px
+			rgba(255, 153, 0, 0.045) 118px 120px
 		);
-		mask-image: radial-gradient(circle at 50% 50%, #000 0 55%, transparent 78%);
-		-webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0 55%, transparent 78%);
+		mask-image: radial-gradient(circle at 50% 50%, transparent 0 46%, #000 62%, transparent 84%);
+		-webkit-mask-image: radial-gradient(
+			circle at 50% 50%,
+			transparent 0 46%,
+			#000 62%,
+			transparent 84%
+		);
 	}
 
 	/* rotating radar sweep beam */
@@ -91,14 +97,21 @@ const BLIPS = [
 		transform: translate(-50%, -50%);
 		background: conic-gradient(
 			from 0deg,
-			rgba(255, 153, 0, 0.14) 0deg,
-			rgba(255, 153, 0, 0.04) 18deg,
-			transparent 46deg,
+			rgba(255, 153, 0, 0.1) 0deg,
+			rgba(255, 153, 0, 0.03) 26deg,
+			transparent 82deg,
 			transparent 360deg
 		);
-		mask-image: radial-gradient(circle at 50% 50%, #000 0 42%, transparent 60%);
-		-webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0 42%, transparent 60%);
-		animation: sweep-rotate 14s linear infinite;
+		/* soft annulus mask so the beam fades in and out instead of cutting a
+		   hard diagonal edge across the panels */
+		mask-image: radial-gradient(circle at 50% 50%, transparent 0 30%, #000 46%, transparent 74%);
+		-webkit-mask-image: radial-gradient(
+			circle at 50% 50%,
+			transparent 0 30%,
+			#000 46%,
+			transparent 74%
+		);
+		animation: sweep-rotate 16s linear infinite;
 		will-change: transform;
 	}
 	@keyframes sweep-rotate {

@@ -154,6 +154,12 @@ const ticks = Array.from({ length: TICK_COUNT }, (_, i) => {
 		font-family: var(--font-mono);
 		font-variant-numeric: tabular-nums;
 	}
+	/* bearing numerals crowd the viewport edges on narrow screens */
+	@media (max-width: 560px) {
+		.ring-labels {
+			display: none;
+		}
+	}
 
 	.ring-outer {
 		transform-origin: 50% 50%;
