@@ -23,6 +23,18 @@ const unconfiguredEnv = (cache: KVStore): GithubEnv => ({
 const ok = (body: unknown) => ({ ok: true, json: () => Promise.resolve(body) });
 
 const apiFetch = vi.fn((url: string) => {
+	if (url.includes('/search/commits')) {
+		return Promise.resolve(
+			ok({
+				total_count: 3,
+				items: [
+					{ commit: { author: { date: '2026-07-05T00:00:00Z' } } },
+					{ commit: { author: { date: '2026-07-04T00:00:00Z' } } },
+					{ commit: { author: { date: '2026-07-04T00:00:00Z' } } },
+				],
+			}),
+		);
+	}
 	if (url.includes('/repos')) return Promise.resolve(ok([{ language: 'TypeScript' }]));
 	if (url.includes('/events/public')) {
 		return Promise.resolve(
@@ -47,15 +59,31 @@ describe('fetchGithubStats', () => {
 		vi.stubGlobal('fetch', apiFetch);
 		const kv = memoryKv();
 		const stats = await fetchGithubStats(unconfiguredEnv(kv), new Date('2026-07-05T12:00:00Z'));
-		expect(stats).toMatchObject({ publicRepos: 42, followers: 7 });
+		expect(stats).toMatchObject({ publicRepos: 42, followers: 7, recentCommits: 3 });
+		expect(stats?.dailyCommits.at(-1)).toBe(1);
+		expect(stats?.dailyCommits.at(-2)).toBe(2);
 		expect(stats?.log[0]).toEqual({ label: 'PUSH ogadra/x', date: '07.05' });
-		expect(JSON.parse(kv.store.get('github-stats:v1') ?? '{}')).toMatchObject({ publicRepos: 42 });
+		expect(JSON.parse(kv.store.get('github-stats:v2') ?? '{}')).toMatchObject({ publicRepos: 42 });
+		expect(JSON.parse(kv.store.get('commit-history:v1') ?? '{}')).toEqual({
+			'2026-07-05': 1,
+			'2026-07-04': 2,
+		});
+	});
+
+	it('accumulates commit history across calls beyond the search window', async () => {
+		const kv = memoryKv();
+		kv.store.set('commit-history:v1', JSON.stringify({ '2026-06-25': 9 }));
+		vi.stubGlobal('fetch', apiFetch);
+		const stats = await fetchGithubStats(unconfiguredEnv(kv), new Date('2026-07-05T12:00:00Z'));
+		// the old day survives even though the search response no longer includes it
+		expect(JSON.parse(kv.store.get('commit-history:v1') ?? '{}')['2026-06-25']).toBe(9);
+		expect(stats?.dailyCommits).toHaveLength(14);
 	});
 
 	it('falls back to the KV snapshot when the API fails', async () => {
 		vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('rate limited')));
 		const kv = memoryKv();
-		kv.store.set('github-stats:v1', JSON.stringify({ publicRepos: 41, followers: 6 }));
+		kv.store.set('github-stats:v2', JSON.stringify({ publicRepos: 41, followers: 6 }));
 		const stats = await fetchGithubStats(unconfiguredEnv(kv));
 		expect(stats).toMatchObject({ publicRepos: 41 });
 	});

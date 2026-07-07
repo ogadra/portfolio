@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bucketByDay, eventLabel, languageRatio } from './githubStats';
+import { eventLabel, languageRatio } from './githubStats';
 
 describe('languageRatio', () => {
 	it('returns the top languages with rounded percentages', () => {
@@ -13,25 +13,6 @@ describe('languageRatio', () => {
 
 	it('returns an empty list when no language is known', () => {
 		expect(languageRatio([null, null])).toEqual([]);
-	});
-});
-
-describe('bucketByDay', () => {
-	it('buckets ISO dates into oldest-to-newest day counts', () => {
-		const now = new Date('2026-07-05T12:00:00Z');
-		const dates = [
-			'2026-07-05T01:00:00Z',
-			'2026-07-05T23:00:00Z',
-			'2026-07-04T10:00:00Z',
-			'2026-07-03T10:00:00Z',
-			'2026-06-01T10:00:00Z',
-		];
-		expect(bucketByDay(dates, now, 3)).toEqual([1, 1, 2]);
-	});
-
-	it('ignores invalid dates', () => {
-		const now = new Date('2026-07-05T12:00:00Z');
-		expect(bucketByDay(['not-a-date'], now, 2)).toEqual([0, 0]);
 	});
 });
 

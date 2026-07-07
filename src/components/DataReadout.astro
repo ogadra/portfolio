@@ -7,10 +7,12 @@ interface Props {
 
 const { stats } = Astro.props;
 
-const maxEvents = Math.max(1, ...(stats?.dailyEvents ?? []));
-const bars = (stats?.dailyEvents ?? Array.from({ length: 14 }, () => 0)).map((count) =>
-	Math.max(8, Math.round((count / maxEvents) * 100)),
-);
+const daily = stats?.dailyCommits ?? Array.from({ length: 14 }, () => 0);
+const maxDaily = Math.max(1, ...daily);
+const bars = daily.map((count) => ({
+	height: count === 0 ? 4 : Math.max(14, Math.round((count / maxDaily) * 100)),
+	active: count > 0,
+}));
 ---
 
 <aside class="readout">
@@ -20,14 +22,20 @@ const bars = (stats?.dailyEvents ?? Array.from({ length: 14 }, () => 0)).map((co
 			<span class="head-jp">活動記録</span>
 		</p>
 		<p class="count-value">
-			<span data-count={stats?.publicRepos ?? undefined}>{stats ? 0 : '--'}</span>
-			<small>PUBLIC REPOS</small>
+			<span data-count={stats?.recentCommits ?? undefined}>{stats ? 0 : '--'}</span>
+			<small>COMMITS · 14D</small>
 		</p>
-		<p class="count-sub">FOLLOWERS // {stats?.followers ?? '--'}</p>
 		<div class="wave" aria-hidden="true">
-			{bars.map((h, i) => <span style={`height:${h}%; animation-delay:${i * 60}ms`} />)}
+			{
+				bars.map((b, i) => (
+					<span
+						class={b.active ? 'on' : 'off'}
+						style={`height:${b.height}%; animation-delay:${i * 60}ms`}
+					/>
+				))
+			}
 		</div>
-		<p class="wave-caption">EVENTS / DAY — LAST 14D{stats ? '' : ' // LINK OFFLINE'}</p>
+		<p class="wave-caption">COMMITS / DAY — LAST 14D{stats ? '' : ' // LINK OFFLINE'}</p>
 	</div>
 
 	<div class="block nerv-panel" id="languages">
@@ -142,40 +150,33 @@ const bars = (stats?.dailyEvents ?? Array.from({ length: 14 }, () => 0)).map((co
 		color: var(--nerv-white);
 		opacity: 0.6;
 	}
-	.count-sub {
-		font-family: var(--font-mono);
-		font-size: 0.6rem;
-		letter-spacing: 0.2em;
-		color: var(--nerv-white);
-		opacity: 0.6;
-	}
 
 	.wave {
 		display: flex;
 		align-items: flex-end;
 		gap: 3px;
-		height: 34px;
+		height: 40px;
 	}
 	.wave span {
 		flex: 1;
-		background: var(--nerv-orange);
-		opacity: 0;
 		transform-origin: bottom;
-		animation: wave-rise 0.4s steps(4, end) forwards;
+		transform: scaleY(0);
+		opacity: 0;
+		animation: wave-rise 0.5s steps(6, end) forwards;
 	}
-	.wave span:last-child {
-		animation:
-			wave-rise 0.4s steps(4, end) forwards,
-			nerv-pulse 1.2s step-end infinite;
+	/* days with commits read as solid orange bars; empty days stay as faint ticks */
+	.wave span.on {
+		background: var(--nerv-orange);
+		--bar-opacity: 0.85;
+	}
+	.wave span.off {
+		background: var(--nerv-white);
+		--bar-opacity: 0.2;
 	}
 	@keyframes wave-rise {
-		from {
-			opacity: 0;
-			transform: scaleY(0);
-		}
 		to {
-			opacity: 0.75;
 			transform: scaleY(1);
+			opacity: var(--bar-opacity);
 		}
 	}
 	.wave-caption {
@@ -230,11 +231,12 @@ const bars = (stats?.dailyEvents ?? Array.from({ length: 14 }, () => 0)).map((co
 		overflow: hidden;
 		position: relative;
 	}
+	/* fade the last line fully out so it reads as a scroll edge, not clipped text */
 	.log-window::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(180deg, transparent 60%, rgba(4, 4, 4, 0.9));
+		background: linear-gradient(180deg, transparent 42%, rgba(4, 4, 4, 0.85) 80%, #040404 100%);
 	}
 	/* line-by-line jump instead of a smooth crawl */
 	.log-scroll {

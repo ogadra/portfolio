@@ -17,23 +17,6 @@ export const languageRatio = (languages: readonly (string | null)[], top = 3): L
 		.map(([name, count]) => ({ name, ratio: Math.round((count / total) * 100) }));
 };
 
-const utcDay = (d: Date) => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-
-export const bucketByDay = (isoDates: readonly string[], now: Date, days: number): number[] => {
-	const buckets = Array.from({ length: days }, () => 0);
-	const today = utcDay(now);
-	for (const iso of isoDates) {
-		const d = new Date(iso);
-		if (Number.isNaN(d.getTime())) continue;
-		const diff = Math.floor((today - utcDay(d)) / 86_400_000);
-		if (diff >= 0 && diff < days) {
-			const index = days - 1 - diff;
-			buckets[index] = (buckets[index] ?? 0) + 1;
-		}
-	}
-	return buckets;
-};
-
 const EVENT_LABELS: Record<string, string> = {
 	PushEvent: 'PUSH',
 	CreateEvent: 'CREATE',
