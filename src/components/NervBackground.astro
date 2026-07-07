@@ -35,8 +35,6 @@ const BLIPS = [
 	<div class="rings"></div>
 	<div class="sweep"></div>
 
-	<div class="scan-band"></div>
-
 	<div class="blips">
 		{BLIPS.map((b) => <span class={b.c} style={`left:${b.x}%; top:${b.y}%; animation-delay:${b.d}s`} />)}
 	</div>
@@ -106,38 +104,6 @@ const BLIPS = [
 	@keyframes sweep-rotate {
 		to {
 			transform: translate(-50%, -50%) rotate(1turn);
-		}
-	}
-
-	/* wide vertical band scanning across the field */
-	.scan-band {
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		width: 28%;
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(255, 153, 0, 0.05) 45%,
-			rgba(255, 153, 0, 0.08) 50%,
-			rgba(255, 153, 0, 0.05) 55%,
-			transparent
-		);
-		animation: scan-band-move 11s ease-in-out infinite;
-		will-change: transform, opacity;
-	}
-	@keyframes scan-band-move {
-		0% {
-			transform: translateX(-120%);
-			opacity: 0;
-		}
-		15%,
-		85% {
-			opacity: 1;
-		}
-		100% {
-			transform: translateX(400%);
-			opacity: 0;
 		}
 	}
 
