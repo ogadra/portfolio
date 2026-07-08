@@ -22,18 +22,16 @@ const unconfiguredEnv = (cache: KVStore): GithubEnv => ({
 
 const ok = (body: unknown) => ({ ok: true, json: () => Promise.resolve(body) });
 
+const DAY_COUNTS: Record<string, number> = {
+	'2026-07-05': 3,
+	'2026-07-04': 2,
+	'2026-07-03': 0,
+};
+
 const apiFetch = vi.fn((url: string) => {
 	if (url.includes('/search/commits')) {
-		return Promise.resolve(
-			ok({
-				total_count: 3,
-				items: [
-					{ commit: { author: { date: '2026-07-05T00:00:00Z' } } },
-					{ commit: { author: { date: '2026-07-04T00:00:00Z' } } },
-					{ commit: { author: { date: '2026-07-04T00:00:00Z' } } },
-				],
-			}),
-		);
+		const day = decodeURIComponent(url).match(/author-date:(\d{4}-\d{2}-\d{2})/)?.[1] ?? '';
+		return Promise.resolve(ok({ total_count: DAY_COUNTS[day] ?? 0 }));
 	}
 	if (url.includes('/repos')) return Promise.resolve(ok([{ language: 'TypeScript' }]));
 	if (url.includes('/events/public')) {
@@ -59,14 +57,15 @@ describe('fetchGithubStats', () => {
 		vi.stubGlobal('fetch', apiFetch);
 		const kv = memoryKv();
 		const stats = await fetchGithubStats(unconfiguredEnv(kv), new Date('2026-07-05T12:00:00Z'));
-		expect(stats).toMatchObject({ publicRepos: 42, followers: 7, recentCommits: 3 });
-		expect(stats?.dailyCommits.at(-1)).toBe(1);
+		expect(stats).toMatchObject({ publicRepos: 42, followers: 7, recentCommits: 5 });
+		expect(stats?.dailyCommits.at(-1)).toBe(3);
 		expect(stats?.dailyCommits.at(-2)).toBe(2);
 		expect(stats?.log[0]).toEqual({ label: 'PUSH ogadra/x', date: '07.05' });
 		expect(JSON.parse(kv.store.get('github-stats:v2') ?? '{}')).toMatchObject({ publicRepos: 42 });
 		expect(JSON.parse(kv.store.get('commit-history:v1') ?? '{}')).toEqual({
-			'2026-07-05': 1,
+			'2026-07-05': 3,
 			'2026-07-04': 2,
+			'2026-07-03': 0,
 		});
 	});
 

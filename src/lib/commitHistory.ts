@@ -8,18 +8,6 @@ const dayKey = (t: number): string => new Date(t).toISOString().slice(0, 10);
 const utcMidnight = (d: Date): number =>
 	Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 
-/** Bucket commit ISO timestamps into a UTC day → count map. */
-export const commitsByDay = (isoDates: readonly string[]): CommitHistory => {
-	const out: CommitHistory = {};
-	for (const iso of isoDates) {
-		const t = Date.parse(iso);
-		if (Number.isNaN(t)) continue;
-		const key = dayKey(utcMidnight(new Date(t)));
-		out[key] = (out[key] ?? 0) + 1;
-	}
-	return out;
-};
-
 /**
  * Merge freshly observed daily counts into the stored history and drop entries
  * older than the retention window. Overlapping days take the larger value so a

@@ -1,9 +1,4 @@
-import {
-	commitSeries,
-	commitsByDay,
-	mergeCommitHistory,
-	type CommitHistory,
-} from './commitHistory';
+import { commitSeries, mergeCommitHistory, type CommitHistory } from './commitHistory';
 import { getInstallationToken, type GithubAppEnv } from './githubApp';
 import { eventLabel, languageRatio, type LanguageShare } from './githubStats';
 
@@ -12,6 +7,9 @@ const USER = 'ogadra';
 const FETCH_TIMEOUT_MS = 2500;
 const ACTIVITY_DAYS = 14;
 const LOG_LINES = 12;
+// Days re-counted on each refresh; older days stay frozen in the KV history.
+const RECENT_DAYS = 3;
+const DAY_MS = 86_400_000;
 const KV_KEY = 'github-stats:v2';
 const HISTORY_KEY = 'commit-history:v1';
 
@@ -47,16 +45,15 @@ interface GithubEvent {
 	repo: { name: string };
 }
 
-interface CommitSearch {
-	total_count: number;
-	items: { commit: { author: { date: string } } }[];
-}
+const dayKey = (t: number): string => new Date(t).toISOString().slice(0, 10);
 
-const commitSearchPath = (now: Date): string => {
-	const since = new Date(now.getTime() - ACTIVITY_DAYS * 86_400_000).toISOString().slice(0, 10);
-	const q = encodeURIComponent(`author:${USER} author-date:>=${since}`);
-	return `/search/commits?q=${q}&per_page=100&sort=author-date&order=desc`;
-};
+/**
+ * Exact commit count for a single UTC day. The search `total_count` is accurate
+ * regardless of the 100-item page cap, so this stays correct even on days with
+ * hundreds of commits.
+ */
+const dayCountPath = (day: string): string =>
+	`/search/commits?q=${encodeURIComponent(`author:${USER} author-date:${day}`)}&per_page=1`;
 
 const request = async <T>(path: string, token: string | undefined): Promise<T> => {
 	const headers: Record<string, string> = {
@@ -82,19 +79,31 @@ const readHistory = async (env: GithubEnv): Promise<CommitHistory> => {
 	}
 };
 
+/** Exact per-day commit counts for the most recent days. */
+const fetchRecentCommitCounts = async (
+	token: string | undefined,
+	now: Date,
+): Promise<CommitHistory> => {
+	const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+	const days = Array.from({ length: RECENT_DAYS }, (_, i) => dayKey(today - i * DAY_MS));
+	const counts = await Promise.all(
+		days.map((day) => request<{ total_count: number }>(dayCountPath(day), token)),
+	);
+	return Object.fromEntries(days.map((day, i) => [day, counts[i].total_count]));
+};
+
 /**
- * The commits search only reaches back ~100 commits, so for an active account
- * it covers just a few days. Persisting each observed day in KV lets the
- * history accumulate past that window. Overlapping days keep their larger
- * count, and the write is skipped when nothing changed.
+ * A single search only reaches ~100 commits, so for an active account it can't
+ * cover a full 14 days. Persisting each day's exact count in KV lets the history
+ * accumulate past that window. Overlapping days keep their larger count, and the
+ * write is skipped when nothing changed.
  */
 const persistCommitHistory = async (
 	env: GithubEnv,
-	items: CommitSearch['items'],
+	fresh: CommitHistory,
 	now: Date,
 ): Promise<CommitHistory> => {
 	const stored = await readHistory(env);
-	const fresh = commitsByDay(items.map((c) => c.commit.author.date));
 	const merged = mergeCommitHistory(stored, fresh, now);
 	if (JSON.stringify(merged) !== JSON.stringify(stored)) {
 		try {
@@ -117,13 +126,13 @@ export const fetchGithubStats = async (
 ): Promise<GithubStats | null> => {
 	try {
 		const token = await getInstallationToken(env, now);
-		const [user, repos, events, commits] = await Promise.all([
+		const [user, repos, events, freshCounts] = await Promise.all([
 			request<GithubUser>(`/users/${USER}`, token),
 			request<GithubRepo[]>(`/users/${USER}/repos?per_page=100&sort=pushed`, token),
 			request<GithubEvent[]>(`/users/${USER}/events/public?per_page=100`, token),
-			request<CommitSearch>(commitSearchPath(now), token),
+			fetchRecentCommitCounts(token, now),
 		]);
-		const history = await persistCommitHistory(env, commits.items, now);
+		const history = await persistCommitHistory(env, freshCounts, now);
 		const dailyCommits = commitSeries(history, now, ACTIVITY_DAYS);
 		const data: GithubStats = {
 			publicRepos: user.public_repos,

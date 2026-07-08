@@ -1,18 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { commitSeries, commitsByDay, mergeCommitHistory } from './commitHistory';
-
-describe('commitsByDay', () => {
-	it('counts commits per UTC day', () => {
-		expect(
-			commitsByDay([
-				'2026-07-07T01:00:00Z',
-				'2026-07-07T23:30:00Z',
-				'2026-07-06T10:00:00Z',
-				'not-a-date',
-			]),
-		).toEqual({ '2026-07-07': 2, '2026-07-06': 1 });
-	});
-});
+import { commitSeries, mergeCommitHistory } from './commitHistory';
 
 describe('mergeCommitHistory', () => {
 	const now = new Date('2026-07-07T12:00:00Z');
