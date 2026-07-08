@@ -18,6 +18,13 @@
 	font-display: swap;
 }
 
+@font-face {
+	font-family: 'DSEG7';
+	src: url('/fonts/DSEG7Classic-Bold.woff2') format('woff2');
+	font-weight: 700;
+	font-display: swap;
+}
+
 :root {
 	--nerv-black: #000000;
 	--nerv-orange: #ff9900;
@@ -32,6 +39,7 @@
 	--font-display: 'Oswald', 'Arial Narrow', Impact, sans-serif;
 	--font-mono: 'Monaspace', 'Courier New', monospace;
 	--font-serif-jp: 'NervSerif', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+	--font-digital: 'DSEG7', 'Monaspace', monospace;
 }
 
 *,

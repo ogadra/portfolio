@@ -274,6 +274,14 @@ const ticks = Array.from({ length: TICK_COUNT }, (_, i) => {
 		text-transform: uppercase;
 		font-variant-numeric: tabular-nums;
 	}
+	/* numeric readouts use a 7-segment display face; the text status keeps Oswald */
+	.orange .stat-value,
+	.cyan .stat-value {
+		font-family: var(--font-digital);
+		font-weight: 700;
+		font-size: 1.15rem;
+		letter-spacing: 0.06em;
+	}
 	.orange {
 		border: 1px solid rgba(255, 153, 0, 0.25);
 	}
