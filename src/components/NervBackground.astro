@@ -95,21 +95,28 @@ const BLIPS = [
 		width: 200vmax;
 		height: 200vmax;
 		transform: translate(-50%, -50%);
+		/* leading edge is clearly visible, then a long tail fades out so the beam
+		   reads as a spinning radar sweep without a hard diagonal boundary */
 		background: conic-gradient(
 			from 0deg,
-			rgba(255, 153, 0, 0.1) 0deg,
-			rgba(255, 153, 0, 0.03) 26deg,
-			transparent 82deg,
+			rgba(255, 153, 0, 0.2) 0deg,
+			rgba(255, 153, 0, 0.08) 34deg,
+			rgba(255, 153, 0, 0) 130deg,
 			transparent 360deg
 		);
-		/* soft annulus mask so the beam fades in and out instead of cutting a
-		   hard diagonal edge across the panels */
-		mask-image: radial-gradient(circle at 50% 50%, transparent 0 30%, #000 46%, transparent 74%);
+		/* wide radial feather: hide the centre (behind the subject) and fade out
+		   gently toward the edges so there is no hard ring */
+		mask-image: radial-gradient(
+			circle at 50% 50%,
+			transparent 0 18%,
+			#000 40% 56%,
+			transparent 90%
+		);
 		-webkit-mask-image: radial-gradient(
 			circle at 50% 50%,
-			transparent 0 30%,
-			#000 46%,
-			transparent 74%
+			transparent 0 18%,
+			#000 40% 56%,
+			transparent 90%
 		);
 		animation: sweep-rotate 16s linear infinite;
 		will-change: transform;
