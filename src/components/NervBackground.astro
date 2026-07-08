@@ -44,11 +44,43 @@ const BLIPS = [
 	<div class="guide" style="left: 88%"></div>
 </div>
 
+<script>
+	// scatter the blips like transient radar contacts, moving each to a new
+	// random spot every time it fades out
+	const rand = (min: number, max: number) => min + Math.random() * (max - min);
+	const place = (el: HTMLElement) => {
+		el.style.left = `${rand(6, 94)}%`;
+		el.style.top = `${rand(8, 92)}%`;
+	};
+	for (const el of document.querySelectorAll<HTMLElement>('.blips span')) {
+		place(el);
+		el.addEventListener('animationiteration', () => place(el));
+	}
+
+	// pin the radar/rings centre to the subject reticle, measured relative to the
+	// scrolling HUD root so it stays aligned as the page scrolls
+	const alignRadar = () => {
+		const root = document.querySelector<HTMLElement>('.hud-root');
+		const stage = document.querySelector<HTMLElement>('.subject .stage');
+		if (!root || !stage) return;
+		const r = root.getBoundingClientRect();
+		const s = stage.getBoundingClientRect();
+		root.style.setProperty('--radar-cx', `${s.left + s.width / 2 - r.left}px`);
+		root.style.setProperty('--radar-cy', `${s.top + s.height / 2 - r.top}px`);
+	};
+	alignRadar();
+	requestAnimationFrame(alignRadar);
+	window.addEventListener('resize', alignRadar);
+	window.addEventListener('load', alignRadar);
+</script>
+
 <style>
+	/* scrolls with the HUD content; radar/rings centre on --radar-cx/cy, which JS
+	   pins to the subject reticle */
 	.nerv-background {
-		position: fixed;
+		position: absolute;
 		inset: 0;
-		z-index: 1;
+		z-index: 0;
 		overflow: hidden;
 		pointer-events: none;
 	}
@@ -72,52 +104,48 @@ const BLIPS = [
 	   the subject reticle in the centre */
 	.rings {
 		position: absolute;
-		inset: -20%;
+		inset: 0;
 		background: repeating-radial-gradient(
-			circle at 50% 50%,
+			circle at var(--radar-cx, 50%) var(--radar-cy, 50%),
 			transparent 0 118px,
 			rgba(255, 153, 0, 0.045) 118px 120px
 		);
-		mask-image: radial-gradient(circle at 50% 50%, transparent 0 46%, #000 62%, transparent 84%);
+		mask-image: radial-gradient(
+			circle at var(--radar-cx, 50%) var(--radar-cy, 50%),
+			transparent 0 46%,
+			#000 62%,
+			transparent 84%
+		);
 		-webkit-mask-image: radial-gradient(
-			circle at 50% 50%,
+			circle at var(--radar-cx, 50%) var(--radar-cy, 50%),
 			transparent 0 46%,
 			#000 62%,
 			transparent 84%
 		);
 	}
 
-	/* rotating radar sweep beam */
+	/* rotating radar sweep beam, centred on the subject reticle */
 	.sweep {
 		position: absolute;
-		top: 50%;
-		left: 50%;
+		left: var(--radar-cx, 50%);
+		top: var(--radar-cy, 50%);
 		width: 200vmax;
 		height: 200vmax;
 		transform: translate(-50%, -50%);
-		/* leading edge is clearly visible, then a long tail fades out so the beam
-		   reads as a spinning radar sweep without a hard diagonal boundary */
+		/* bright leading edge at 130deg with the tail ramping up behind it, so a
+		   clockwise sweep shows the sharp edge in front and the fade trailing */
 		background: conic-gradient(
 			from 0deg,
-			rgba(255, 153, 0, 0.2) 0deg,
-			rgba(255, 153, 0, 0.08) 34deg,
-			rgba(255, 153, 0, 0) 130deg,
+			rgba(255, 153, 0, 0) 0deg,
+			rgba(255, 153, 0, 0.08) 96deg,
+			rgba(255, 153, 0, 0.2) 130deg,
+			transparent 131deg,
 			transparent 360deg
 		);
-		/* wide radial feather: hide the centre (behind the subject) and fade out
+		/* covers the centre so the beam sweeps across the subject icon, fading out
 		   gently toward the edges so there is no hard ring */
-		mask-image: radial-gradient(
-			circle at 50% 50%,
-			transparent 0 18%,
-			#000 40% 56%,
-			transparent 90%
-		);
-		-webkit-mask-image: radial-gradient(
-			circle at 50% 50%,
-			transparent 0 18%,
-			#000 40% 56%,
-			transparent 90%
-		);
+		mask-image: radial-gradient(circle at 50% 50%, #000 0 52%, transparent 88%);
+		-webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0 52%, transparent 88%);
 		animation: sweep-rotate 16s linear infinite;
 		will-change: transform;
 	}

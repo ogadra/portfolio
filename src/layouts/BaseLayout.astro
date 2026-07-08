@@ -1,7 +1,6 @@
 ---
 import { getLocale } from '../paraglide/runtime.js';
 import BootOverlay from '../components/BootOverlay.astro';
-import NervBackground from '../components/NervBackground.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -55,7 +54,6 @@ const { title = 'ogadra.com' } = Astro.props;
 	</head>
 	<body>
 		<BootOverlay />
-		<NervBackground />
 		<div class="content-root">
 			<slot />
 		</div>

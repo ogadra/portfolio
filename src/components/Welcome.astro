@@ -4,6 +4,7 @@ import { fetchGithubStats } from '../lib/github';
 import CommandBar from './CommandBar.astro';
 import DataReadout from './DataReadout.astro';
 import MagiRoles from './MagiRoles.astro';
+import NervBackground from './NervBackground.astro';
 import StatusTicker from './StatusTicker.astro';
 import SubjectDisplay from './SubjectDisplay.astro';
 
@@ -11,6 +12,7 @@ const stats = await fetchGithubStats(env);
 ---
 
 <div class="hud-root">
+	<NervBackground />
 	<span class="corner tl" aria-hidden="true"></span>
 	<span class="corner tr" aria-hidden="true"></span>
 	<span class="corner bl" aria-hidden="true"></span>
@@ -35,8 +37,17 @@ const stats = await fetchGithubStats(env);
 		position: relative;
 	}
 
+	/* keep every real panel above the scrollable background layer */
+	.hud-root > header,
+	.hud-root > main,
+	.hud-root > footer {
+		position: relative;
+		z-index: 1;
+	}
+
 	.corner {
 		position: absolute;
+		z-index: 1;
 		width: 26px;
 		height: 26px;
 		border: 0 solid var(--nerv-orange);
