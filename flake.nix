@@ -23,12 +23,11 @@
             pkgs.wrangler
             pkgs.git
             pkgs.curl
-            pkgs.chromium
+            pkgs.playwright-driver.browsers
             hk.packages.${system}.default
           ];
 
-          PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
-          PWTEST_CLI_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
+          PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
 
           # workerd (astro dev / wrangler dev) needs an explicit CA bundle for outbound TLS
