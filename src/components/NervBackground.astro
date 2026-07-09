@@ -88,6 +88,9 @@ const BLIPS = [
 	.hex-layer {
 		position: absolute;
 		inset: 0;
+		/* base opacity chosen so the layer stays subtle when reduced-motion
+		   disables the breathing animation */
+		opacity: 0.08;
 		animation: hex-breathe 8s ease-in-out infinite;
 	}
 	@keyframes hex-breathe {
@@ -152,6 +155,23 @@ const BLIPS = [
 	@keyframes sweep-rotate {
 		to {
 			transform: translate(-50%, -50%) rotate(1turn);
+		}
+	}
+	/* the hex breathing and radar sweep are slow enough to stay comfortable
+	   with reduced-motion; keep them running so the HUD reads correctly and
+	   the frozen sweep wedge does not sit as a bright static band */
+	@media (prefers-reduced-motion: reduce) {
+		.hex-layer {
+			animation-duration: 8s !important;
+			animation-iteration-count: infinite !important;
+		}
+		.sweep {
+			animation-duration: 16s !important;
+			animation-iteration-count: infinite !important;
+		}
+		.blips span {
+			animation-duration: 4.5s !important;
+			animation-iteration-count: infinite !important;
 		}
 	}
 
