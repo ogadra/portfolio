@@ -59,9 +59,9 @@ const BLIPS = [
 
 	// pin the radar/rings centre to the subject reticle, measured relative to the
 	// scrolling HUD root so it stays aligned as the page scrolls
+	const root = document.querySelector<HTMLElement>('.hud-root');
+	const stage = document.querySelector<HTMLElement>('.subject .stage');
 	const alignRadar = () => {
-		const root = document.querySelector<HTMLElement>('.hud-root');
-		const stage = document.querySelector<HTMLElement>('.subject .stage');
 		if (!root || !stage) return;
 		const r = root.getBoundingClientRect();
 		const s = stage.getBoundingClientRect();
@@ -70,6 +70,13 @@ const BLIPS = [
 	};
 	alignRadar();
 	requestAnimationFrame(alignRadar);
+	// browser zoom (Cmd/Ctrl +/-) reflows the layout without firing resize on
+	// every step, so watch the elements themselves instead
+	if (root && stage) {
+		const ro = new ResizeObserver(alignRadar);
+		ro.observe(root);
+		ro.observe(stage);
+	}
 	window.addEventListener('resize', alignRadar);
 	window.addEventListener('load', alignRadar);
 </script>
