@@ -1,0 +1,73 @@
+---
+import type { GithubStats } from '../lib/github';
+
+interface Props {
+	stats: GithubStats | null;
+}
+
+const { stats } = Astro.props;
+
+const message = [
+	'GITHUB github.com/ogadra',
+	'TWITTER @const_myself',
+	`PUBLIC REPOS ${stats?.publicRepos ?? '--'}`,
+	'STACK TypeScript / Go / HCL',
+	'CLASSIFICATION SOFTWARE ENGINEER',
+	'SITE ogadra.com — ASTRO ON CLOUDFLARE WORKERS',
+].join('  ///  ');
+---
+
+<footer class="ticker" aria-hidden="true">
+	<div class="hazard"></div>
+	<div class="track">
+		<span>{message}&nbsp;&nbsp;///&nbsp;&nbsp;</span>
+		<span>{message}&nbsp;&nbsp;///&nbsp;&nbsp;</span>
+	</div>
+</footer>
+
+<style>
+	.ticker {
+		border: 1px solid var(--nerv-panel-edge);
+		background: rgba(4, 4, 4, 0.92);
+	}
+
+	.hazard {
+		height: 5px;
+		background: repeating-linear-gradient(
+			-45deg,
+			transparent,
+			transparent 10px,
+			rgba(255, 153, 0, 0.55) 10px,
+			rgba(255, 153, 0, 0.55) 20px
+		);
+		background-size: 28px 28px;
+		animation: hazard-scroll 1.4s steps(7, end) infinite;
+	}
+	@keyframes hazard-scroll {
+		to {
+			background-position: 28px 0;
+		}
+	}
+
+	.track {
+		display: flex;
+		white-space: nowrap;
+		overflow: hidden;
+		padding: 0.4rem 0;
+	}
+	/* stepped marquee: text jumps roughly one character at a time */
+	.track span {
+		flex-shrink: 0;
+		font-family: var(--font-mono);
+		font-size: 0.62rem;
+		letter-spacing: 0.3em;
+		color: var(--nerv-orange);
+		opacity: 0.75;
+		animation: ticker-scroll 48s steps(240, end) infinite;
+	}
+	@keyframes ticker-scroll {
+		to {
+			transform: translateX(-100%);
+		}
+	}
+</style>

@@ -1,0 +1,7 @@
+# Copy to .dev.vars for local development.
+# GitHub App credentials — the app only needs read access to public metadata.
+GITHUB_APP_ID=123456
+GITHUB_APP_INSTALLATION_ID=12345678
+# PKCS#8 PEM on a single line with \n escapes.
+# GitHub issues PKCS#1 keys; convert with: openssl pkcs8 -topk8 -nocrypt -in downloaded-key.pem
+GITHUB_APP_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMII...\n-----END PRIVATE KEY-----"

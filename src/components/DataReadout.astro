@@ -1,0 +1,268 @@
+---
+import type { GithubStats } from '../lib/github';
+
+interface Props {
+	stats: GithubStats | null;
+}
+
+const { stats } = Astro.props;
+
+const daily = stats?.dailyCommits ?? Array.from({ length: 14 }, () => 0);
+const maxDaily = Math.max(1, ...daily);
+const bars = daily.map((count) => ({
+	height: count === 0 ? 4 : Math.max(14, Math.round((count / maxDaily) * 100)),
+	active: count > 0,
+}));
+---
+
+<aside class="readout">
+	<div class="block nerv-panel" id="activity">
+		<p class="block-head">
+			<span class="nerv-section-label">GitHub Activity</span>
+			<span class="head-jp">活動記録</span>
+		</p>
+		<p class="count-value">
+			<span data-count={stats?.recentCommits ?? undefined}>{stats ? 0 : '--'}</span>
+			<small>COMMITS · 14D</small>
+		</p>
+		<div class="wave" aria-hidden="true">
+			{
+				bars.map((b, i) => (
+					<span
+						class={b.active ? 'on' : 'off'}
+						style={`height:${b.height}%; animation-delay:${i * 60}ms`}
+					/>
+				))
+			}
+		</div>
+		<p class="wave-caption">COMMITS / DAY — LAST 14D{stats ? '' : ' // LINK OFFLINE'}</p>
+	</div>
+
+	<div class="block nerv-panel" id="languages">
+		<p class="block-head">
+			<span class="nerv-section-label">Language Ratio</span>
+			<span class="head-jp">使用言語</span>
+		</p>
+		{
+			stats && stats.languages.length > 0 ? (
+				stats.languages.slice(0, 3).map((lang, i) => (
+					<div class="gauge">
+						<span class="gauge-label">{lang.name}</span>
+						<span class="gauge-meter">
+							<span
+								class="gauge-fill"
+								style={`width:${lang.ratio}%; animation-delay:${i * 150}ms`}
+							/>
+						</span>
+						<span class="gauge-note">{lang.ratio}%</span>
+					</div>
+				))
+			) : (
+				<p class="offline">DATA LINK OFFLINE</p>
+			)
+		}
+	</div>
+
+	<div class="block nerv-panel" id="log">
+		<p class="block-head">
+			<span class="nerv-section-label">Update Log</span>
+			<span class="head-jp">更新履歴</span>
+		</p>
+		{
+			stats && stats.log.length > 0 ? (
+				<div class="log-window">
+					<div class="log-scroll" style={`--log-lines:${stats.log.length}`}>
+						<pre>{stats.log.map((l) => `${l.date} ${l.label}`).join('\n')}</pre>
+						<pre aria-hidden="true">{stats.log.map((l) => `${l.date} ${l.label}`).join('\n')}</pre>
+					</div>
+				</div>
+			) : (
+				<p class="offline">DATA LINK OFFLINE</p>
+			)
+		}
+	</div>
+</aside>
+
+<script>
+	const el = document.querySelector<HTMLElement>('[data-count]');
+	const target = Number(el?.dataset.count);
+	if (el && Number.isFinite(target)) {
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			el.textContent = String(target);
+		} else {
+			// digital counter: irregular discrete increments instead of a smooth tween
+			let current = 0;
+			const step = Math.max(1, Math.ceil(target / 12));
+			const timer = setInterval(() => {
+				current = Math.min(target, current + Math.ceil(Math.random() * step));
+				el.textContent = String(current);
+				if (current >= target) clearInterval(timer);
+			}, 70);
+		}
+	}
+</script>
+
+<style>
+	.readout {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		min-width: 0;
+	}
+
+	.block {
+		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+		padding: 0.75rem;
+	}
+
+	.block-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+	.head-jp {
+		font-family: var(--font-serif-jp);
+		font-weight: 900;
+		font-size: 0.62rem;
+		letter-spacing: 0.3em;
+		color: var(--nerv-white);
+		opacity: 0.55;
+		white-space: nowrap;
+	}
+
+	.count-value {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5em;
+		font-family: var(--font-mono);
+		font-variant-numeric: tabular-nums;
+		font-size: 2.3rem;
+		line-height: 1;
+		color: var(--nerv-orange);
+		text-shadow: 0 0 6px rgba(255, 153, 0, 0.4);
+	}
+	.count-value small {
+		font-size: 0.58rem;
+		letter-spacing: 0.25em;
+		color: var(--nerv-white);
+		opacity: 0.6;
+	}
+
+	.wave {
+		display: flex;
+		align-items: flex-end;
+		gap: 3px;
+		height: 40px;
+	}
+	.wave span {
+		flex: 1;
+		transform-origin: bottom;
+		transform: scaleY(0);
+		opacity: 0;
+		animation: wave-rise 0.5s steps(6, end) forwards;
+	}
+	/* days with commits read as solid orange bars; empty days stay as faint ticks */
+	.wave span.on {
+		background: var(--nerv-orange);
+		--bar-opacity: 0.85;
+	}
+	.wave span.off {
+		background: var(--nerv-white);
+		--bar-opacity: 0.2;
+	}
+	@keyframes wave-rise {
+		to {
+			transform: scaleY(1);
+			opacity: var(--bar-opacity);
+		}
+	}
+	.wave-caption {
+		font-family: var(--font-mono);
+		font-size: 0.52rem;
+		letter-spacing: 0.18em;
+		color: var(--nerv-white);
+		opacity: 0.45;
+	}
+
+	.gauge {
+		display: grid;
+		grid-template-columns: 6.5em 1fr auto;
+		align-items: center;
+		gap: 0.5em;
+		font-family: var(--font-mono);
+		font-size: 0.6rem;
+		letter-spacing: 0.08em;
+	}
+	.gauge-label {
+		color: var(--nerv-white);
+		opacity: 0.7;
+		white-space: nowrap;
+	}
+	.gauge-meter {
+		height: 8px;
+		border: 1px solid rgba(255, 153, 0, 0.18);
+		padding: 1px;
+		overflow: hidden;
+	}
+	/* segmented fill: discrete blocks instead of a smooth gradient */
+	.gauge-fill {
+		display: block;
+		height: 100%;
+		background: repeating-linear-gradient(90deg, var(--nerv-orange) 0 6px, transparent 6px 8px);
+		transform: scaleX(0);
+		transform-origin: left;
+		animation: gauge-draw 0.9s steps(12, end) forwards;
+	}
+	@keyframes gauge-draw {
+		to {
+			transform: scaleX(1);
+		}
+	}
+	.gauge-note {
+		color: var(--nerv-green);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.log-window {
+		height: 108px;
+		overflow: hidden;
+		position: relative;
+	}
+	/* fade the last line fully out so it reads as a scroll edge, not clipped text */
+	.log-window::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(180deg, transparent 42%, rgba(4, 4, 4, 0.85) 80%, #040404 100%);
+	}
+	/* line-by-line jump instead of a smooth crawl */
+	.log-scroll {
+		animation: log-up 18s steps(var(--log-lines, 12), end) infinite;
+	}
+	.log-scroll pre {
+		font-family: var(--font-mono);
+		font-size: 0.58rem;
+		line-height: 1.7;
+		letter-spacing: 0.08em;
+		color: var(--nerv-orange);
+		opacity: 0.6;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	@keyframes log-up {
+		to {
+			transform: translateY(-50%);
+		}
+	}
+
+	.offline {
+		font-family: var(--font-mono);
+		font-size: 0.62rem;
+		letter-spacing: 0.25em;
+		color: var(--nerv-red);
+		animation: nerv-pulse 1.5s step-end infinite;
+	}
+</style>

@@ -1,0 +1,166 @@
+<header class="command-bar">
+	<div class="primary">
+		<div class="brand">
+			<svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+				<polygon
+					points="16,2 28.1,9 28.1,23 16,30 3.9,23 3.9,9"
+					fill="none"
+					stroke="var(--nerv-orange)"
+					stroke-width="1.5"></polygon>
+				<polygon points="16,9 22.1,20 9.9,20" fill="var(--nerv-orange)"></polygon>
+			</svg>
+			<div class="brand-text">
+				<span class="brand-sub">個人サイト</span>
+				<a class="brand-name" href="/">ogadra.com</a>
+			</div>
+		</div>
+		<div class="meta">
+			<a class="chip" href="https://github.com/ogadra" rel="me">GitHub</a>
+			<a class="chip" href="https://twitter.com/const_myself" rel="me">Twitter</a>
+			<span class="clock" aria-hidden="true">
+				<span data-hud-date>----.--.--</span>
+				<time data-hud-time>--:--:--</time>
+			</span>
+			<span class="sys-status" aria-hidden="true">SYS<b>NOMINAL</b></span>
+		</div>
+	</div>
+</header>
+
+<script>
+	import { formatHudDate, formatHudTime } from '../lib/hudClock';
+
+	const dateEl = document.querySelector('[data-hud-date]');
+	const timeEl = document.querySelector('[data-hud-time]');
+	const tick = () => {
+		const now = new Date();
+		if (dateEl) dateEl.textContent = formatHudDate(now);
+		if (timeEl) timeEl.textContent = formatHudTime(now);
+	};
+	tick();
+	setInterval(tick, 1000);
+</script>
+
+<style>
+	.command-bar {
+		position: sticky;
+		top: 0;
+		z-index: 100;
+		border: 1px solid var(--nerv-panel-edge);
+		background: rgba(4, 4, 4, 0.97);
+	}
+
+	.primary {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem 1rem;
+		padding: 0.55rem 0.9rem;
+	}
+
+	.brand {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+	}
+	.brand-mark {
+		width: 30px;
+		height: 30px;
+		filter: drop-shadow(0 0 3px rgba(255, 153, 0, 0.5));
+	}
+	.brand-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		line-height: 1.1;
+	}
+	.brand-sub {
+		font-family: var(--font-serif-jp);
+		font-weight: 900;
+		font-size: 0.56rem;
+		letter-spacing: 0.5em;
+		color: var(--nerv-white);
+		opacity: 0.5;
+	}
+	.brand-name {
+		font-family: var(--font-display);
+		font-size: 0.95rem;
+		letter-spacing: 0.3em;
+		text-transform: uppercase;
+		text-decoration: none;
+		color: var(--nerv-orange);
+	}
+	.brand-name:hover,
+	.brand-name:focus-visible {
+		text-shadow: 0 0 6px rgba(255, 153, 0, 0.6);
+	}
+	.brand-name:focus-visible {
+		outline: 2px solid var(--nerv-orange);
+		outline-offset: 4px;
+	}
+
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 1rem;
+		min-width: 0;
+	}
+	.chip {
+		font-family: var(--font-display);
+		font-size: clamp(0.5rem, 1.3vw, 0.62rem);
+		letter-spacing: 0.25em;
+		text-transform: uppercase;
+		text-decoration: none;
+		color: var(--nerv-orange);
+		border: 1px solid var(--nerv-line-strong);
+		padding: 0.3em 0.75em;
+	}
+	.chip:hover,
+	.chip:focus-visible {
+		background: var(--nerv-orange);
+		color: var(--nerv-black);
+	}
+	.chip:focus-visible {
+		outline: 2px solid var(--nerv-orange);
+		outline-offset: 3px;
+	}
+
+	.clock {
+		display: flex;
+		gap: 0.7rem;
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.15em;
+		font-variant-numeric: tabular-nums;
+		color: var(--nerv-white);
+		opacity: 0.8;
+	}
+	.clock time {
+		color: var(--nerv-orange);
+		opacity: 1;
+	}
+	.sys-status {
+		display: flex;
+		align-items: baseline;
+		gap: 0.45em;
+		font-family: var(--font-display);
+		font-size: 0.62rem;
+		letter-spacing: 0.25em;
+		color: var(--nerv-white);
+		opacity: 0.6;
+	}
+	.sys-status b {
+		font-weight: 500;
+		color: var(--nerv-green);
+		opacity: 1;
+		animation: nerv-flicker 5s step-end infinite;
+	}
+
+	@media (max-width: 900px) {
+		.clock span[data-hud-date],
+		.sys-status {
+			display: none;
+		}
+	}
+</style>
