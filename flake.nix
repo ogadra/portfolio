@@ -15,21 +15,21 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        isLinux = pkgs.stdenv.isLinux;
       in {
-        devShells.default = pkgs.mkShell {
+        devShells.default = pkgs.mkShell ({
           packages = [
             pkgs.nodejs_24
             pkgs.pnpm
             pkgs.wrangler
             pkgs.git
             pkgs.curl
-            pkgs.chromium
             hk.packages.${system}.default
-          ];
-
+          ] ++ pkgs.lib.optional isLinux pkgs.chromium;
+        } // pkgs.lib.optionalAttrs isLinux {
           PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
           PWTEST_CLI_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
-        };
+        });
       });
 }
