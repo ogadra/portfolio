@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test';
 
-test('keeps the HUD chrome up when there are no stats', async ({ page }) => {
+test('degrades every GitHub panel when there are no stats', async ({ page }) => {
 	await page.goto('/');
 
-	await expect(page).toHaveTitle('ogadra.com');
-	await expect(page.locator('.ticker')).toContainText('PUBLIC REPOS --');
+	await expect(page.getByRole('heading', { name: 'OGADRA' })).toBeVisible();
+	await expect(page.locator('#languages')).toContainText('DATA LINK OFFLINE');
+	await expect(page.locator('#log')).toContainText('DATA LINK OFFLINE');
+	await expect(page.locator('#activity')).toContainText('LINK OFFLINE');
+	await expect(page.locator('#skills .meter')).toHaveCount(0);
 });

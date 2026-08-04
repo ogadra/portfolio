@@ -1,8 +1,11 @@
 ---
 import type { GithubStats } from '../lib/github';
 import CommandBar from './CommandBar.astro';
+import DataReadout from './DataReadout.astro';
+import MagiRoles from './MagiRoles.astro';
 import NervBackground from './NervBackground.astro';
 import StatusTicker from './StatusTicker.astro';
+import SubjectDisplay from './SubjectDisplay.astro';
 
 interface Props {
 	stats: GithubStats | null;
@@ -19,9 +22,38 @@ const { stats } = Astro.props;
 	<span class="corner br" aria-hidden="true"></span>
 
 	<CommandBar />
-	<main class="hud-main"></main>
+	<main class="hud-main">
+		<DataReadout stats={stats} />
+		<SubjectDisplay stats={stats} />
+		<MagiRoles languages={stats?.languages ?? []} />
+	</main>
 	<StatusTicker stats={stats} />
 </div>
+
+<script>
+	// pin the radar/rings centre to the subject reticle, measured relative to this
+	// scrolling HUD root so the background stays aligned as the page scrolls
+	const root = document.querySelector<HTMLElement>('.hud-root');
+	const stage = document.querySelector<HTMLElement>('.subject .stage');
+	if (!root || !stage) {
+		throw new Error('cannot align the radar: .hud-root or .subject .stage is missing');
+	}
+	const alignRadar = () => {
+		const r = root.getBoundingClientRect();
+		const s = stage.getBoundingClientRect();
+		root.style.setProperty('--radar-cx', `${s.left + s.width / 2 - r.left}px`);
+		root.style.setProperty('--radar-cy', `${s.top + s.height / 2 - r.top}px`);
+	};
+	alignRadar();
+	requestAnimationFrame(alignRadar);
+	// browser zoom (Cmd/Ctrl +/-) reflows the layout without firing resize on
+	// every step, so watch the elements themselves instead
+	const ro = new ResizeObserver(alignRadar);
+	ro.observe(root);
+	ro.observe(stage);
+	window.addEventListener('resize', alignRadar);
+	window.addEventListener('load', alignRadar);
+</script>
 
 <style>
 	.hud-root {
@@ -82,6 +114,11 @@ const { stats } = Astro.props;
 		gap: 1rem;
 		align-items: center;
 	}
+	.hud-main > :global(.readout),
+	.hud-main > :global(.magi) {
+		align-self: stretch;
+		justify-content: center;
+	}
 
 	@media (max-width: 1000px) {
 		.hud-root {
@@ -90,6 +127,9 @@ const { stats } = Astro.props;
 		.hud-main {
 			grid-template-columns: 1fr;
 			gap: 1.25rem;
+		}
+		.hud-main > :global(.subject) {
+			order: -1;
 		}
 	}
 </style>
