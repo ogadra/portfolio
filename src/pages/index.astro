@@ -1,8 +1,19 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import { env } from 'cloudflare:workers';
 import Welcome from '../components/Welcome.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { fetchGithubStats } from '../lib/github';
+import { FIXTURE_STATS, STATS_MODE } from '../lib/statsFixture';
+
+// GITHUB_STATS pins the data for the browser tests; unset means a live fetch.
+const stats =
+	env.GITHUB_STATS === STATS_MODE.fixture
+		? FIXTURE_STATS
+		: env.GITHUB_STATS === STATS_MODE.offline
+			? null
+			: await fetchGithubStats(env);
 ---
 
 <BaseLayout>
-	<Welcome />
+	<Welcome stats={stats} />
 </BaseLayout>
