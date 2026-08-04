@@ -3,4 +3,22 @@
 	"name": "portfolio",
 	"compatibility_date": "2026-07-03",
 	"compatibility_flags": ["nodejs_compat"],
+	"kv_namespaces": [
+		{
+			"binding": "GITHUB_CACHE",
+		},
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "portfolio",
+			"database_id": "df0a57fd-43ed-45d4-b099-14a37d464e2b",
+			"migrations_dir": "migrations",
+		},
+	],
+	// Refresh the persisted daily commit history twice a day so each day is
+	// captured before it rolls out of the GitHub commit-search window.
+	"triggers": {
+		"crons": ["0 */12 * * *"],
+	},
 }

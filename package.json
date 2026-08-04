@@ -4,14 +4,14 @@
 	"type": "module",
 	"scripts": {
 		"dev": "astro dev",
-		"build": "astro build",
+		"build": "astro build && node scripts/postbuild.mjs",
 		"preview": "wrangler dev --config dist/server/wrangler.json",
 		"check": "astro check && vp check",
 		"test": "vp test",
 		"test:e2e": "playwright test",
 		"lint": "vp check",
 		"format": "vp check --fix",
-		"deploy": "astro build && wrangler deploy --config dist/server/wrangler.json",
+		"deploy": "pnpm build && wrangler deploy --config dist/server/wrangler.json",
 		"astro": "astro"
 	},
 	"dependencies": {

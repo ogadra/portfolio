@@ -5,7 +5,7 @@ import {
 	EMPTY_MS,
 	REMOVE_MS,
 	wordAnimationDuration,
-} from '../src/lib/typewriterTiming';
+} from './typewriterTiming';
 
 describe('wordAnimationDuration', () => {
 	it('returns 3360ms for a 9-character word', () => {
