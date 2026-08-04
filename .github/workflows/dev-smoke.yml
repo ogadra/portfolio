@@ -22,7 +22,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Start astro dev and expect HTTP 200
-        run: scripts/wait-for-http.sh http://127.0.0.1:4321/ -- pnpm dev --host 127.0.0.1 --port 4321
+        run: .github/scripts/wait-for-http.sh http://127.0.0.1:4321/ -- pnpm dev --host 127.0.0.1 --port 4321
 
   wrangler-dev:
     name: Start wrangler dev and request home page
@@ -41,4 +41,4 @@ jobs:
       - name: Start wrangler dev and expect HTTP 200
         env:
           WRANGLER_SEND_METRICS: false
-        run: scripts/wait-for-http.sh http://127.0.0.1:8787/ -- pnpm preview --ip 127.0.0.1 --port 8787
+        run: .github/scripts/wait-for-http.sh http://127.0.0.1:8787/ -- pnpm preview --ip 127.0.0.1 --port 8787
