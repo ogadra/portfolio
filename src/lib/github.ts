@@ -24,7 +24,7 @@ export interface GithubStats {
 	languages: LanguageShare[];
 	recentCommits: number;
 	dailyCommits: number[];
-	log: { label: string; date: string }[];
+	log: { label: string; occurredAt: string }[];
 }
 
 export interface GithubEnv extends GithubAppEnv {
@@ -54,37 +54,48 @@ const unexpected = (shape: string): never => {
 	throw new Error(`GitHub API returned an unexpected ${shape}`);
 };
 
-const parseUser = (body: unknown): GithubUser =>
-	isRecord(body) && typeof body.public_repos === 'number' && typeof body.followers === 'number'
-		? { public_repos: body.public_repos, followers: body.followers }
-		: unexpected('user');
+const parseUser = (body: unknown): GithubUser => {
+	if (!isRecord(body)) return unexpected('user');
+	const { public_repos: publicRepos, followers } = body;
+	if (typeof publicRepos !== 'number') return unexpected('user');
+	if (typeof followers !== 'number') return unexpected('user');
+	return { public_repos: publicRepos, followers };
+};
 
-const parseRepos = (body: unknown): GithubRepo[] =>
-	Array.isArray(body)
-		? body.map((repo) =>
-				isRecord(repo) && (typeof repo.language === 'string' || repo.language === null)
-					? { language: repo.language }
-					: unexpected('repo'),
-			)
-		: unexpected('repo list');
+const parseRepo = (body: unknown): GithubRepo => {
+	if (!isRecord(body)) return unexpected('repo');
+	const { language } = body;
+	if (typeof language !== 'string' && language !== null) return unexpected('repo');
+	return { language };
+};
 
-const parseEvents = (body: unknown): GithubEvent[] =>
-	Array.isArray(body)
-		? body.map((event) =>
-				isRecord(event) &&
-				typeof event.type === 'string' &&
-				typeof event.created_at === 'string' &&
-				isRecord(event.repo) &&
-				typeof event.repo.name === 'string'
-					? { type: event.type, created_at: event.created_at, repo: { name: event.repo.name } }
-					: unexpected('event'),
-			)
-		: unexpected('event list');
+const parseRepos = (body: unknown): GithubRepo[] => {
+	if (!Array.isArray(body)) return unexpected('repo list');
+	return body.map(parseRepo);
+};
 
-const parseCommitCount = (body: unknown): number =>
-	isRecord(body) && typeof body.total_count === 'number'
-		? body.total_count
-		: unexpected('commit count');
+const parseEvent = (body: unknown): GithubEvent => {
+	if (!isRecord(body)) return unexpected('event');
+	const { type, created_at: createdAt, repo } = body;
+	if (typeof type !== 'string') return unexpected('event');
+	if (typeof createdAt !== 'string') return unexpected('event');
+	if (!isRecord(repo)) return unexpected('event');
+	const { name } = repo;
+	if (typeof name !== 'string') return unexpected('event');
+	return { type, created_at: createdAt, repo: { name } };
+};
+
+const parseEvents = (body: unknown): GithubEvent[] => {
+	if (!Array.isArray(body)) return unexpected('event list');
+	return body.map(parseEvent);
+};
+
+const parseCommitCount = (body: unknown): number => {
+	if (!isRecord(body)) return unexpected('commit count');
+	const { total_count: totalCount } = body;
+	if (typeof totalCount !== 'number') return unexpected('commit count');
+	return totalCount;
+};
 
 const dayCountPath = (day: string): string =>
 	`/search/commits?q=${encodeURIComponent(`author:${USER} author-date:${day}`)}&per_page=1`;
@@ -128,7 +139,7 @@ const buildSnapshot = (user: GithubUser, repos: GithubRepo[], events: GithubEven
 	),
 	log: events.slice(0, LOG_LINES).map((e) => ({
 		label: `${eventLabel(e.type)} ${e.repo.name}`,
-		date: e.created_at.slice(5, 10).replace('-', '.'),
+		occurredAt: e.created_at,
 	})),
 });
 
