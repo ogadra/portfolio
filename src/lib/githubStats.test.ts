@@ -32,7 +32,7 @@ describe('eventLabel', () => {
 		expect(eventLabel('PullRequestEvent')).toBe('PULL_REQ');
 	});
 
-	it('falls back to the uppercased type name', () => {
-		expect(eventLabel('GollumEvent')).toBe('GOLLUM');
+	it('passes an unknown type through untouched', () => {
+		expect(eventLabel('SomethingNewEvent')).toBe('SomethingNewEvent');
 	});
 });

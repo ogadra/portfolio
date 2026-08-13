@@ -17,18 +17,25 @@ export const languageRatio = (languages: readonly (string | null)[], top = 3): L
 		.map(([name, count]) => ({ name, ratio: Math.round((count / total) * 100) }));
 };
 
+/** Every event type the public events API delivers, as documented by GitHub. */
 const EVENT_LABELS: Record<string, string> = {
-	PushEvent: 'PUSH',
+	CommitCommentEvent: 'COMMENT',
 	CreateEvent: 'CREATE',
 	DeleteEvent: 'DELETE',
-	PullRequestEvent: 'PULL_REQ',
-	PullRequestReviewEvent: 'REVIEW',
-	IssuesEvent: 'ISSUE',
-	IssueCommentEvent: 'COMMENT',
-	WatchEvent: 'STAR',
 	ForkEvent: 'FORK',
+	GollumEvent: 'WIKI',
+	IssueCommentEvent: 'COMMENT',
+	IssuesEvent: 'ISSUE',
+	MemberEvent: 'MEMBER',
+	PublicEvent: 'PUBLIC',
+	PullRequestEvent: 'PULL_REQ',
+	PullRequestReviewCommentEvent: 'REVIEW',
+	PullRequestReviewEvent: 'REVIEW',
+	PullRequestReviewThreadEvent: 'REVIEW',
+	PushEvent: 'PUSH',
 	ReleaseEvent: 'RELEASE',
+	SponsorshipEvent: 'SPONSOR',
+	WatchEvent: 'STAR',
 };
 
-export const eventLabel = (type: string): string =>
-	EVENT_LABELS[type] ?? type.replace(/Event$/, '').toUpperCase();
+export const eventLabel = (type: string): string => EVENT_LABELS[type] ?? type;
