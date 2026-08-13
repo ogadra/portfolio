@@ -5,7 +5,7 @@ export interface Snapshot {
 	publicRepos: number;
 	followers: number;
 	languages: LanguageShare[];
-	log: { label: string; date: string }[];
+	log: { label: string; occurredAt: string }[];
 }
 
 export interface GithubStore {
@@ -42,9 +42,9 @@ ON CONFLICT(day) DO UPDATE SET count = MAX(count, excluded.count)`;
 
 /**
  * Splits the snapshot across both stores: the single-row user stats live in KV,
- * the ordered language and event lists stay in D1 alongside the commit history.
- * A snapshot write therefore spans two stores and is not atomic; a torn write
- * only mixes counters from adjacent refreshes, which the fallback path tolerates.
+ * the language and event lists stay in D1 alongside the commit history. A
+ * snapshot write therefore spans two stores and is not atomic; a torn write only
+ * mixes counters from adjacent refreshes, which the fallback path tolerates.
  */
 export const cloudflareStore = (db: D1Database, kv: KVNamespace): GithubStore => ({
 	async readCommitHistory(sinceDay) {
@@ -67,11 +67,11 @@ export const cloudflareStore = (db: D1Database, kv: KVNamespace): GithubStore =>
 		const user = await kv.get<UserStats>(USER_STATS_KEY, 'json');
 		if (!user) return null;
 		const languages = await db
-			.prepare('SELECT name, ratio FROM languages ORDER BY position')
+			.prepare('SELECT name, ratio FROM languages ORDER BY ratio DESC, name')
 			.all<{ name: string; ratio: number }>();
 		const log = await db
-			.prepare('SELECT label, date FROM event_log ORDER BY position')
-			.all<{ label: string; date: string }>();
+			.prepare('SELECT label, occurred_at AS occurredAt FROM event_log ORDER BY occurred_at DESC')
+			.all<{ label: string; occurredAt: string }>();
 		return {
 			publicRepos: user.publicRepos,
 			followers: user.followers,
@@ -83,16 +83,14 @@ export const cloudflareStore = (db: D1Database, kv: KVNamespace): GithubStore =>
 	async writeSnapshot(snapshot) {
 		const statements: D1PreparedStatement[] = [
 			db.prepare('DELETE FROM languages'),
-			...snapshot.languages.map((l, i) =>
-				db
-					.prepare('INSERT INTO languages (position, name, ratio) VALUES (?, ?, ?)')
-					.bind(i, l.name, l.ratio),
+			...snapshot.languages.map((l) =>
+				db.prepare('INSERT INTO languages (name, ratio) VALUES (?, ?)').bind(l.name, l.ratio),
 			),
 			db.prepare('DELETE FROM event_log'),
-			...snapshot.log.map((e, i) =>
+			...snapshot.log.map((e) =>
 				db
-					.prepare('INSERT INTO event_log (position, label, date) VALUES (?, ?, ?)')
-					.bind(i, e.label, e.date),
+					.prepare('INSERT INTO event_log (occurred_at, label) VALUES (?, ?)')
+					.bind(e.occurredAt, e.label),
 			),
 		];
 		const stats: UserStats = {

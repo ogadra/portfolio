@@ -49,7 +49,7 @@ const SNAPSHOT: Snapshot = {
 	publicRepos: 42,
 	followers: 7,
 	languages: [{ name: 'TypeScript', ratio: 0.8 }],
-	log: [{ label: 'PUSH ogadra/portfolio', date: '07.05' }],
+	log: [{ label: 'PUSH ogadra/portfolio', occurredAt: '2026-07-05T23:12:07Z' }],
 };
 
 describe('cloudflareStore snapshot', () => {
@@ -63,7 +63,7 @@ describe('cloudflareStore snapshot', () => {
 		expect(queries.filter((q) => q.includes('event_log'))).toHaveLength(2);
 	});
 
-	it('binds each list row with the position readSnapshot orders by', async () => {
+	it('binds each list row with the columns readSnapshot orders by', async () => {
 		const { db, bindings } = fakeDb();
 		await cloudflareStore(db, fakeKv().kv).writeSnapshot({
 			...SNAPSHOT,
@@ -72,22 +72,22 @@ describe('cloudflareStore snapshot', () => {
 				{ name: 'Go', ratio: 0.2 },
 			],
 			log: [
-				{ label: 'PUSH ogadra/portfolio', date: '07.05' },
-				{ label: 'PR ogadra/portfolio', date: '07.04' },
+				{ label: 'PUSH ogadra/portfolio', occurredAt: '2026-07-05T23:12:07Z' },
+				{ label: 'PULL_REQ ogadra/portfolio', occurredAt: '2026-07-04T08:41:52Z' },
 			],
 		});
 		expect(bindings).toEqual([
-			[0, 'TypeScript', 0.8],
-			[1, 'Go', 0.2],
-			[0, 'PUSH ogadra/portfolio', '07.05'],
-			[1, 'PR ogadra/portfolio', '07.04'],
+			['TypeScript', 0.8],
+			['Go', 0.2],
+			['2026-07-05T23:12:07Z', 'PUSH ogadra/portfolio'],
+			['2026-07-04T08:41:52Z', 'PULL_REQ ogadra/portfolio'],
 		]);
 	});
 
 	it('reassembles the snapshot from both stores', async () => {
 		const { db } = fakeDb({
 			languages: [{ name: 'TypeScript', ratio: 0.8 }],
-			event_log: [{ label: 'PUSH ogadra/portfolio', date: '07.05' }],
+			event_log: [{ label: 'PUSH ogadra/portfolio', occurredAt: '2026-07-05T23:12:07Z' }],
 		});
 		const cache = fakeKv(JSON.stringify({ publicRepos: 42, followers: 7 }));
 		expect(await cloudflareStore(db, cache.kv).readSnapshot()).toEqual(SNAPSHOT);
