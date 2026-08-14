@@ -1,3 +1,4 @@
+import { Temporal } from 'temporal-polyfill';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { buildJwtClaims, getInstallationToken } from './githubApp';
 
@@ -30,10 +31,10 @@ afterEach(() => {
 
 describe('buildJwtClaims', () => {
 	it('backdates iat by 60s and expires 540s later', () => {
-		const now = new Date('2026-07-05T00:10:00Z');
+		const now = Temporal.Instant.from('2026-07-05T00:10:00Z');
 		const { payload } = buildJwtClaims('12345', now);
 		expect(payload.iss).toBe('12345');
-		expect(payload.iat).toBe(Math.floor(now.getTime() / 1000) - 60);
+		expect(payload.iat).toBe(Math.floor(now.epochMilliseconds / 1000) - 60);
 		expect(payload.exp - payload.iat).toBe(540);
 	});
 });
@@ -42,7 +43,7 @@ describe('getInstallationToken', () => {
 	it('returns undefined when app auth is not configured', async () => {
 		const token = await getInstallationToken(
 			{ GITHUB_APP_ID: '', GITHUB_APP_PRIVATE_KEY: '', GITHUB_APP_INSTALLATION_ID: '' },
-			new Date(),
+			Temporal.Now.instant(),
 		);
 		expect(token).toBeUndefined();
 	});
@@ -53,7 +54,7 @@ describe('getInstallationToken', () => {
 			Promise.resolve({ ok: true, json: () => Promise.resolve({ token: 'minted-token' }) }),
 		);
 		vi.stubGlobal('fetch', fetchSpy);
-		const now = new Date('2026-07-05T00:00:00Z');
+		const now = Temporal.Instant.from('2026-07-05T00:00:00Z');
 		expect(await getInstallationToken(env, now)).toBe('minted-token');
 		expect(await getInstallationToken(env, now)).toBe('minted-token');
 		expect(fetchSpy).toHaveBeenCalledTimes(2);
@@ -72,7 +73,7 @@ describe('getInstallationToken', () => {
 			...env,
 			GITHUB_APP_PRIVATE_KEY: env.GITHUB_APP_PRIVATE_KEY.split('\n').join('\\n'),
 		};
-		expect(await getInstallationToken(singleLine, new Date())).toBe('minted-token');
+		expect(await getInstallationToken(singleLine, Temporal.Now.instant())).toBe('minted-token');
 	});
 
 	it('names the conversion when handed a PKCS#1 key', async () => {
@@ -85,7 +86,7 @@ describe('getInstallationToken', () => {
 					'-----BEGIN RSA PRIVATE KEY-----\nMII\n-----END RSA PRIVATE KEY-----',
 				GITHUB_APP_INSTALLATION_ID: '67890',
 			},
-			new Date(),
+			Temporal.Now.instant(),
 		);
 		expect(token).toBeUndefined();
 		expect(String(errors.at(-1))).toContain('openssl pkcs8 -topk8');
@@ -98,6 +99,6 @@ describe('getInstallationToken', () => {
 			vi.fn(() => Promise.resolve({ ok: false, status: 401 })),
 		);
 		vi.spyOn(console, 'error').mockImplementation(() => {});
-		expect(await getInstallationToken(env, new Date())).toBeUndefined();
+		expect(await getInstallationToken(env, Temporal.Now.instant())).toBeUndefined();
 	});
 });

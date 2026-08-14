@@ -18,7 +18,8 @@
 		"@astrojs/check": "^0.9.10",
 		"@astrojs/cloudflare": "^14.1.7",
 		"@inlang/paraglide-js": "^2.23.1",
-		"astro": "^7.1.6"
+		"astro": "^7.1.6",
+		"temporal-polyfill": "^1.0.3"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.61.1",
@@ -29,7 +30,7 @@
 		"wrangler": "^4.118.0"
 	},
 	"engines": {
-		"node": ">=24.16.0"
+		"node": ">=26.6.0"
 	},
 	"packageManager": "pnpm@11.9.0"
 }
