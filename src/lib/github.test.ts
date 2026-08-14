@@ -1,3 +1,4 @@
+import { Temporal } from 'temporal-polyfill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { CommitHistory } from './commitHistory';
 import { fetchGithubStats, type GithubEnv } from './github';
@@ -78,7 +79,11 @@ describe('fetchGithubStats', () => {
 	it('returns live stats and stores a snapshot', async () => {
 		vi.stubGlobal('fetch', apiFetch);
 		const store = memoryStore();
-		const stats = await fetchGithubStats(unconfiguredEnv, new Date('2026-07-05T12:00:00Z'), store);
+		const stats = await fetchGithubStats(
+			unconfiguredEnv,
+			Temporal.Instant.from('2026-07-05T12:00:00Z'),
+			store,
+		);
 		expect(stats).toMatchObject({ publicRepos: 42, followers: 7, recentCommits: 5 });
 		expect(stats?.dailyCommits.at(-1)).toBe(3);
 		expect(stats?.dailyCommits.at(-2)).toBe(2);
@@ -95,9 +100,13 @@ describe('fetchGithubStats', () => {
 		vi.stubGlobal('fetch', apiFetch);
 		const store = memoryStore();
 
-		await fetchGithubStats(unconfiguredEnv, new Date('2026-07-05T12:00:00Z'), store);
+		await fetchGithubStats(unconfiguredEnv, Temporal.Instant.from('2026-07-05T12:00:00Z'), store);
 		// three days on, the 07-05 count has rolled out of the commit-search window
-		const stats = await fetchGithubStats(unconfiguredEnv, new Date('2026-07-08T12:00:00Z'), store);
+		const stats = await fetchGithubStats(
+			unconfiguredEnv,
+			Temporal.Instant.from('2026-07-08T12:00:00Z'),
+			store,
+		);
 
 		expect(store.history['2026-07-05']).toBe(3);
 		expect(stats?.dailyCommits).toHaveLength(14);
@@ -111,7 +120,7 @@ describe('fetchGithubStats', () => {
 		store.history['2024-01-01'] = 9;
 		store.history['2026-06-25'] = 4;
 
-		await fetchGithubStats(unconfiguredEnv, new Date('2026-07-05T12:00:00Z'), store);
+		await fetchGithubStats(unconfiguredEnv, Temporal.Instant.from('2026-07-05T12:00:00Z'), store);
 
 		expect(store.history['2024-01-01']).toBeUndefined();
 		expect(store.history['2026-06-25']).toBe(4);
@@ -149,7 +158,11 @@ describe('fetchGithubStats', () => {
 		const store = memoryStore();
 		store.snapshot = { publicRepos: 41, followers: 6, languages: [], log: [] };
 		store.writeSnapshot = () => Promise.reject(new Error('D1 unavailable'));
-		const stats = await fetchGithubStats(unconfiguredEnv, new Date('2026-07-05T12:00:00Z'), store);
+		const stats = await fetchGithubStats(
+			unconfiguredEnv,
+			Temporal.Instant.from('2026-07-05T12:00:00Z'),
+			store,
+		);
 		expect(stats).toMatchObject({ publicRepos: 41, followers: 6 });
 	});
 });
@@ -190,14 +203,22 @@ describe('fetchGithubStats app auth', () => {
 			),
 		);
 
-		await fetchGithubStats(configuredEnv, new Date('2026-07-05T12:00:00Z'), memoryStore());
+		await fetchGithubStats(
+			configuredEnv,
+			Temporal.Instant.from('2026-07-05T12:00:00Z'),
+			memoryStore(),
+		);
 
 		expect(authHeaders()).toEqual(['Bearer minted-token']);
 	});
 
 	it('sends no authorization header when app auth is not configured', async () => {
 		vi.stubGlobal('fetch', apiFetch);
-		await fetchGithubStats(unconfiguredEnv, new Date('2026-07-05T12:00:00Z'), memoryStore());
+		await fetchGithubStats(
+			unconfiguredEnv,
+			Temporal.Instant.from('2026-07-05T12:00:00Z'),
+			memoryStore(),
+		);
 		expect(authHeaders()).toEqual([undefined]);
 	});
 });

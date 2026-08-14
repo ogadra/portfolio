@@ -1,3 +1,5 @@
+import { Temporal } from 'temporal-polyfill';
+
 const JWT_LIFETIME_S = 540;
 const FETCH_TIMEOUT_MS = 2500;
 
@@ -32,8 +34,8 @@ const pemToPkcs8 = (pem: string): Uint8Array<ArrayBuffer> => {
 };
 
 /** JWT header/payload as GitHub App auth expects them; pure for testability. */
-export const buildJwtClaims = (appId: string, now: Date) => {
-	const iat = Math.floor(now.getTime() / 1000) - 60;
+export const buildJwtClaims = (appId: string, now: Temporal.Instant) => {
+	const iat = Math.floor(now.epochMilliseconds / 1000) - 60;
 	return {
 		header: { alg: 'RS256', typ: 'JWT' },
 		payload: { iat, exp: iat + JWT_LIFETIME_S, iss: appId },
@@ -43,7 +45,7 @@ export const buildJwtClaims = (appId: string, now: Date) => {
 export const createAppJwt = async (
 	appId: string,
 	privateKeyPem: string,
-	now: Date,
+	now: Temporal.Instant,
 ): Promise<string> => {
 	const { header, payload } = buildJwtClaims(appId, now);
 	const signingInput = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(payload))}`;
@@ -69,7 +71,7 @@ export const createAppJwt = async (
  */
 export const getInstallationToken = async (
 	env: GithubAppEnv,
-	now: Date,
+	now: Temporal.Instant,
 ): Promise<string | undefined> => {
 	if (!env.GITHUB_APP_ID || !env.GITHUB_APP_PRIVATE_KEY || !env.GITHUB_APP_INSTALLATION_ID) {
 		return undefined;
