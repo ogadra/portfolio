@@ -14,7 +14,11 @@ const bars = daily.map((count) => ({
 	height: count === 0 ? 4 : Math.max(14, Math.round((count / maxDaily) * 100)),
 	active: count > 0,
 }));
-const logText = stats?.log.map((l) => `${l.date} ${l.label}`).join('\n');
+/** Reads the stored instant as `MM/DD HH:MM`, keeping the UTC the API reports. */
+const stamp = (occurredAt: string): string =>
+	`${occurredAt.slice(5, 10).replace('-', '/')} ${occurredAt.slice(11, 16)}`;
+
+const logText = stats?.log.map((l) => `${stamp(l.occurredAt)} ${l.label}`).join('\n');
 ---
 
 <aside class="readout">

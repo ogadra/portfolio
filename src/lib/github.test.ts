@@ -82,7 +82,7 @@ describe('fetchGithubStats', () => {
 		expect(stats).toMatchObject({ publicRepos: 42, followers: 7, recentCommits: 5 });
 		expect(stats?.dailyCommits.at(-1)).toBe(3);
 		expect(stats?.dailyCommits.at(-2)).toBe(2);
-		expect(stats?.log[0]).toEqual({ label: 'PUSH ogadra/x', date: '07.05' });
+		expect(stats?.log[0]).toEqual({ label: 'PUSH ogadra/x', occurredAt: '2026-07-05T00:00:00Z' });
 		expect(store.snapshot).toMatchObject({ publicRepos: 42 });
 		expect(store.history).toEqual({
 			'2026-07-05': 3,
