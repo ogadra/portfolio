@@ -1,4 +1,5 @@
-import { commitSeries, DAY_MS, dayKey, utcMidnight, type CommitHistory } from './commitHistory';
+import { Temporal } from 'temporal-polyfill';
+import { commitSeries, utcDay, type CommitHistory } from './commitHistory';
 import { getInstallationToken, type GithubAppEnv } from './githubApp';
 import { eventLabel, languageRatio, type LanguageShare } from './githubStats';
 import {
@@ -116,19 +117,24 @@ const request = async (path: string, token: string | undefined): Promise<unknown
 
 const fetchRecentCommitCounts = async (
 	token: string | undefined,
-	now: Date,
+	now: Temporal.Instant,
 ): Promise<CommitHistory> => {
-	const today = utcMidnight(now);
-	const days = Array.from({ length: RECENT_DAYS }, (_, i) => dayKey(today - i * DAY_MS));
+	const today = utcDay(now);
+	const days = Array.from({ length: RECENT_DAYS }, (_, i) =>
+		today.subtract({ days: i }).toString(),
+	);
 	const bodies = await Promise.all(days.map((day) => request(dayCountPath(day), token)));
 	return Object.fromEntries(days.map((day, i) => [day, parseCommitCount(bodies[i])]));
 };
 
 /** Oldest day the sparkline can show, so the store never reads past it. */
-const activityWindowStart = (now: Date): string =>
-	dayKey(utcMidnight(now) - (ACTIVITY_DAYS - 1) * DAY_MS);
+const activityWindowStart = (now: Temporal.Instant): string =>
+	utcDay(now)
+		.subtract({ days: ACTIVITY_DAYS - 1 })
+		.toString();
 
-const retentionCutoff = (now: Date): string => dayKey(utcMidnight(now) - RETENTION_DAYS * DAY_MS);
+const retentionCutoff = (now: Temporal.Instant): string =>
+	utcDay(now).subtract({ days: RETENTION_DAYS }).toString();
 
 const buildSnapshot = (user: GithubUser, repos: GithubRepo[], events: GithubEvent[]): Snapshot => ({
 	publicRepos: user.public_repos,
@@ -152,10 +158,13 @@ const toStats = (snapshot: Snapshot, dailyCommits: number[]): GithubStats => ({
 	log: snapshot.log,
 });
 
-const readActivity = async (store: GithubStore, now: Date): Promise<number[]> =>
+const readActivity = async (store: GithubStore, now: Temporal.Instant): Promise<number[]> =>
 	commitSeries(await store.readCommitHistory(activityWindowStart(now)), now, ACTIVITY_DAYS);
 
-const readFallbackStats = async (store: GithubStore, now: Date): Promise<GithubStats | null> => {
+const readFallbackStats = async (
+	store: GithubStore,
+	now: Temporal.Instant,
+): Promise<GithubStats | null> => {
 	const snapshot = await store.readSnapshot();
 	if (!snapshot) return null;
 	return toStats(snapshot, await readActivity(store, now));
@@ -168,7 +177,7 @@ const readFallbackStats = async (store: GithubStore, now: Date): Promise<GithubS
  */
 export const fetchGithubStats = async (
 	env: GithubEnv,
-	now = new Date(),
+	now = Temporal.Now.instant(),
 	store: GithubStore = cloudflareStore(env.DB, env.GITHUB_CACHE),
 ): Promise<GithubStats | null> => {
 	try {
