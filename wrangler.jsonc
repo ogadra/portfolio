@@ -12,7 +12,6 @@
 		{
 			"binding": "DB",
 			"database_name": "portfolio",
-			"database_id": "df0a57fd-43ed-45d4-b099-14a37d464e2b",
 			"migrations_dir": "migrations",
 		},
 	],
