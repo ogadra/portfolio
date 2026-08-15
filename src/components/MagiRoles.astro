@@ -30,8 +30,7 @@ const units = [
 	{
 		units.map((u) => {
 			const share = stats ? languageShare(stats.languages, u.tech) : null;
-			// a language the account does not write and a fetch that never landed
-			// both leave the share empty, so the badge is what tells them apart
+			// the badge is what tells a missing language apart from a missing fetch
 			const badge = stats === null ? 'NO LINK' : share === null ? 'N/A' : 'OK';
 			return (
 				<div class={`unit ${u.accent}`}>

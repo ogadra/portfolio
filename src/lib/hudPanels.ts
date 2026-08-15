@@ -6,11 +6,7 @@ export interface CommitBar {
 	active: boolean;
 }
 
-/**
- * A silent day keeps a 4% stub rather than disappearing, and a day with any
- * commit at all is lifted to 14% so a single commit next to a busy one is still
- * a bar and not a line.
- */
+/** Scaled against the busiest day: a 4% stub for a silent one, a 14% floor for the rest. */
 export const commitBars = (daily: readonly number[]): CommitBar[] => {
 	const busiest = Math.max(1, ...daily);
 	return daily.map((count) => ({

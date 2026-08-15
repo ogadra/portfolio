@@ -31,8 +31,7 @@ const { stats } = Astro.props;
 </div>
 
 <script>
-	// pin the radar/rings centre to the subject reticle, measured relative to this
-	// scrolling HUD root so the background stays aligned as the page scrolls
+	// centre the radar on the subject reticle, measured against the HUD root
 	const root = document.querySelector<HTMLElement>('.hud-root');
 	const stage = document.querySelector<HTMLElement>('#subject .stage');
 	if (!root || !stage) {
@@ -44,14 +43,11 @@ const { stats } = Astro.props;
 		root.style.setProperty('--radar-cx', `${s.left + s.width / 2 - r.left}px`);
 		root.style.setProperty('--radar-cy', `${s.top + s.height / 2 - r.top}px`);
 	};
-	// observing delivers a first measurement, and every reflow after it: a window
-	// resize, a browser zoom step, or the portrait finally arriving all reach the
-	// two elements' own boxes
+	// observing delivers the first measurement and every reflow after it
 	const ro = new ResizeObserver(alignRadar);
 	ro.observe(root);
 	ro.observe(stage);
-	// a font swapping under the identity text moves the stage without resizing
-	// anything the observer watches, so measure once more when the page settles
+	// a font swap moves the stage without resizing what the observer watches
 	window.addEventListener('load', alignRadar);
 </script>
 

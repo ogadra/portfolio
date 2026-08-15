@@ -17,8 +17,7 @@ test('reads every stat as unavailable rather than as a zero', async ({ page }) =
 	await expect(page.locator('#subject .stat.orange .stat-value')).toHaveText('--');
 	await expect(page.locator('#subject .stat.cyan .stat-value')).toHaveText('--');
 	await expect(page.locator('#subject .stat.green .stat-value')).toHaveText('OFFLINE');
-	// a missing fetch reads as NO LINK, which is what tells it apart from a
-	// language the account simply does not write
+	// NO LINK is what tells a missing fetch apart from a missing language
 	await expect(page.locator('#skills .na')).toHaveCount(3);
 	await expect(page.locator('#skills')).toContainText('NO LINK');
 	await expect(page.locator('#skills .meter')).toHaveCount(0);
