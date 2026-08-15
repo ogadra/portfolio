@@ -1,4 +1,6 @@
 .ticker {
+	position: relative;
+	z-index: 1;
 	border: 1px solid var(--nerv-panel-edge);
 	background: rgba(4, 4, 4, 0.92);
 }

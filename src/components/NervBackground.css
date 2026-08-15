@@ -23,24 +23,18 @@
 	}
 }
 
-/* concentric range rings, kept to an outer band so they don't collide with
-   the subject reticle in the centre */
+/* kept to an outer band so the rings don't collide with the subject reticle */
 .rings {
 	position: absolute;
 	inset: 0;
 	background: repeating-radial-gradient(
-		circle at var(--radar-cx, 50%) var(--radar-cy, 50%),
+		circle at 50% 50%,
 		transparent 0 118px,
 		rgba(255, 153, 0, 0.045) 118px 120px
 	);
-	mask-image: radial-gradient(
-		circle at var(--radar-cx, 50%) var(--radar-cy, 50%),
-		transparent 0 46%,
-		#000 62%,
-		transparent 84%
-	);
+	mask-image: radial-gradient(circle at 50% 50%, transparent 0 46%, #000 62%, transparent 84%);
 	-webkit-mask-image: radial-gradient(
-		circle at var(--radar-cx, 50%) var(--radar-cy, 50%),
+		circle at 50% 50%,
 		transparent 0 46%,
 		#000 62%,
 		transparent 84%
@@ -49,8 +43,8 @@
 
 .sweep {
 	position: absolute;
-	left: var(--radar-cx, 50%);
-	top: var(--radar-cy, 50%);
+	left: 50%;
+	top: 50%;
 	width: 200vmax;
 	height: 200vmax;
 	transform: translate(-50%, -50%);
@@ -64,8 +58,7 @@
 		transparent 131deg,
 		transparent 360deg
 	);
-	/* covers the centre so the beam sweeps across the subject icon, fading out
-	   gently toward the edges so there is no hard ring */
+	/* faded at the edges so the beam has no hard outer ring */
 	mask-image: radial-gradient(circle at 50% 50%, #000 0 52%, transparent 88%);
 	-webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0 52%, transparent 88%);
 	animation: sweep-rotate 16s linear infinite;

@@ -3,8 +3,10 @@ import { STATS_MODE, type StatsMode } from './src/lib/statsMode';
 
 // GITHUB_STATS pins the home page data so a run never reaches api.github.com:
 // one server serves the populated HUD, the other the offline HUD.
-const FIXTURE_PORT = 8787;
-const OFFLINE_PORT = 8788;
+// reuseExistingServer only probes the URL, so these stay off wrangler's default
+// 8787: a hand-started preview there would be adopted with the var unset.
+const FIXTURE_PORT = 8891;
+const OFFLINE_PORT = 8892;
 const externalBaseURL = process.env.PLAYWRIGHT_BASE_URL;
 const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 

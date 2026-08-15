@@ -1,5 +1,6 @@
 ---
 import type { GithubStats } from '../lib/github';
+import { PROFILE } from '../lib/profile';
 
 interface Props {
 	stats: GithubStats | null;
@@ -7,15 +8,14 @@ interface Props {
 
 const { stats } = Astro.props;
 
-// The ticker reads as instrument text rather than prose, so it stays in the one
-// form the HUD is drawn around and never goes through the message catalogue.
+// Instrument readout, not localisable copy: kept out of the message catalogue.
 const message = [
-	'GITHUB github.com/ogadra',
-	'TWITTER @const_myself',
+	`GITHUB ${PROFILE.github.label}`,
+	`TWITTER ${PROFILE.twitter.label}`,
 	`PUBLIC REPOS ${stats?.publicRepos ?? '--'}`,
 	'STACK TypeScript / Go / HCL',
 	'CLASSIFICATION SOFTWARE ENGINEER',
-	'SITE ogadra.com / ASTRO ON CLOUDFLARE WORKERS',
+	`SITE ${PROFILE.siteName} / ASTRO ON CLOUDFLARE WORKERS`,
 ].join('  ///  ');
 ---
 

@@ -2,11 +2,11 @@
 import HexField from '../assets/hexField.svg';
 
 const BLIPS = [
-	{ x: 22, y: 34, c: 'cyan', d: 0 },
-	{ x: 78, y: 26, c: 'orange', d: 1.3 },
-	{ x: 66, y: 72, c: 'cyan', d: 2.1 },
-	{ x: 34, y: 78, c: 'orange', d: 0.7 },
-	{ x: 88, y: 58, c: 'cyan', d: 3.2 },
+	{ x: 22, y: 34, tone: 'cyan', delaySec: 0 },
+	{ x: 78, y: 26, tone: 'orange', delaySec: 1.3 },
+	{ x: 66, y: 72, tone: 'cyan', delaySec: 2.1 },
+	{ x: 34, y: 78, tone: 'orange', delaySec: 0.7 },
+	{ x: 88, y: 58, tone: 'cyan', delaySec: 3.2 },
 ];
 ---
 
@@ -17,7 +17,14 @@ const BLIPS = [
 	<div class="sweep"></div>
 
 	<div class="blips">
-		{BLIPS.map((b) => <span class={b.c} style={`left:${b.x}%; top:${b.y}%; animation-delay:${b.d}s`} />)}
+		{
+			BLIPS.map((b) => (
+				<span
+					class={b.tone}
+					style={`left:${b.x}%; top:${b.y}%; animation-delay:${b.delaySec}s`}
+				/>
+			))
+		}
 	</div>
 
 	<div class="guide" style="left: 12%"></div>
@@ -26,8 +33,8 @@ const BLIPS = [
 </div>
 
 <script>
-	// the authored coordinates stand for the first pass so the blips are spread
-	// out without JS; every fade-out after that moves the contact somewhere new
+	// the authored coordinates only cover the first pass; re-placing the blip on
+	// each fade-out keeps the contacts from settling into a fixed pattern
 	const rand = (min: number, max: number) => min + Math.random() * (max - min);
 	const place = (el: HTMLElement) => {
 		el.style.left = `${rand(6, 94)}%`;

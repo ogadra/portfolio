@@ -1,23 +1,14 @@
 ---
 import { env } from 'cloudflare:workers';
-import Welcome from '../components/Welcome.astro';
+import HudShell from '../components/HudShell.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { fetchGithubStats, type GithubStats } from '../lib/github';
-import { FIXTURE_STATS } from '../lib/github.fixture';
-import { STATS_MODE } from '../lib/statsMode';
+import { resolveGithubStats } from '../lib/homeStats';
 
 const { cfContext } = Astro.locals;
 
-// GITHUB_STATS pins the data for the browser tests; unset means a live fetch.
-const readStats = async (): Promise<GithubStats | null> => {
-	if (env.GITHUB_STATS === STATS_MODE.fixture) return FIXTURE_STATS;
-	if (env.GITHUB_STATS === STATS_MODE.offline) return null;
-	return fetchGithubStats(env, (promise) => cfContext.waitUntil(promise));
-};
-
-const stats = await readStats();
+const stats = await resolveGithubStats(env, (promise) => cfContext.waitUntil(promise));
 ---
 
 <BaseLayout>
-	<Welcome stats={stats} />
+	<HudShell stats={stats} />
 </BaseLayout>

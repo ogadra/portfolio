@@ -6,8 +6,7 @@
 }
 
 /* The reticle is an imported SVG, so only its root carries a scope; the parts
-   inside it are reached from here. Each ring flickers or sweeps in on its own
-   delay, so the assembly reads as an instrument coming up. */
+   inside it are reached from here. */
 #boot .reticle {
 	overflow: visible;
 	filter: drop-shadow(0 0 5px rgba(255, 153, 0, 0.4));
@@ -59,18 +58,18 @@
 	width: 220px;
 }
 #boot .boot-status {
-	font-family: 'Monaspace', 'Courier New', monospace;
+	font-family: var(--font-mono);
 	font-size: 0.65rem;
 	letter-spacing: 0.3em;
-	color: #ff9900;
+	color: var(--nerv-orange);
 	animation: boot-blink 0.8s step-end infinite;
 }
 #boot .boot-pct {
-	font-family: 'Monaspace', 'Courier New', monospace;
+	font-family: var(--font-mono);
 	font-size: 0.65rem;
 	letter-spacing: 0.15em;
 	font-variant-numeric: tabular-nums;
-	color: #e3ddd4;
+	color: var(--nerv-white);
 }
 
 #boot .boot-progress {
@@ -84,7 +83,7 @@
 	display: block;
 	width: 100%;
 	height: 100%;
-	background: #ff9900;
+	background: var(--nerv-orange);
 	transform: scaleX(0);
 	transform-origin: left;
 	animation: boot-progress 0.9s steps(12, end) 0.1s forwards;
@@ -98,10 +97,10 @@
 	gap: 0.25rem;
 }
 #boot .boot-log li {
-	font-family: 'Monaspace', 'Courier New', monospace;
+	font-family: var(--font-mono);
 	font-size: 0.58rem;
 	letter-spacing: 0.2em;
-	color: #e3ddd4;
+	color: var(--nerv-white);
 	opacity: 0;
 	animation: boot-flicker-in 0.25s step-end forwards;
 }
@@ -110,7 +109,7 @@
 	position: absolute;
 	width: 28px;
 	height: 28px;
-	border: 0 solid #ff9900;
+	border: 0 solid var(--nerv-orange);
 	opacity: 0;
 	animation: boot-flicker-in 0.3s step-end forwards;
 }

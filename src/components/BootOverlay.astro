@@ -28,10 +28,7 @@ import BootReticle from '../assets/bootReticle.svg';
 <script is:inline>
 	(() => {
 		const el = document.getElementById('boot');
-		const pct = el && el.querySelector('[data-boot-pct]');
-		if (!el || !pct) {
-			throw new Error('boot overlay markup is missing #boot or [data-boot-pct]');
-		}
+		const pct = el.querySelector('[data-boot-pct]');
 		let v = 0;
 		const timer = setInterval(() => {
 			v = Math.min(100, v + Math.ceil(Math.random() * 14));
