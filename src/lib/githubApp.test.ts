@@ -1,28 +1,7 @@
 import { Temporal } from 'temporal-polyfill';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { configuredAppEnv as configuredEnv } from './githubApp.fixture';
 import { buildJwtClaims, getInstallationToken } from './githubApp';
-
-const generatePrivateKeyPem = async (): Promise<string> => {
-	const { privateKey } = (await crypto.subtle.generateKey(
-		{
-			name: 'RSASSA-PKCS1-v1_5',
-			modulusLength: 2048,
-			publicExponent: new Uint8Array([1, 0, 1]),
-			hash: 'SHA-256',
-		},
-		true,
-		['sign', 'verify'],
-	)) as CryptoKeyPair;
-	const pkcs8 = await crypto.subtle.exportKey('pkcs8', privateKey);
-	const base64 = btoa(String.fromCharCode(...new Uint8Array(pkcs8)));
-	return `-----BEGIN PRIVATE KEY-----\n${base64.match(/.{1,64}/g)?.join('\n')}\n-----END PRIVATE KEY-----`;
-};
-
-const configuredEnv = async () => ({
-	GITHUB_APP_ID: '12345',
-	GITHUB_APP_PRIVATE_KEY: await generatePrivateKeyPem(),
-	GITHUB_APP_INSTALLATION_ID: '67890',
-});
 
 afterEach(() => {
 	vi.unstubAllGlobals();
@@ -100,5 +79,18 @@ describe('getInstallationToken', () => {
 		);
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		expect(await getInstallationToken(env, Temporal.Now.instant())).toBeUndefined();
+	});
+
+	it('reports a 2xx body that carries no token instead of passing it off as unconfigured', async () => {
+		const env = await configuredEnv();
+		const errors: unknown[] = [];
+		vi.spyOn(console, 'error').mockImplementation((...args) => errors.push(...args));
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ expires_at: 'x' }) })),
+		);
+
+		expect(await getInstallationToken(env, Temporal.Now.instant())).toBeUndefined();
+		expect(String(errors.at(-1))).toContain('token');
 	});
 });

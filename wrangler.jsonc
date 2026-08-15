@@ -15,8 +15,7 @@
 			"migrations_dir": "migrations",
 		},
 	],
-	// Refresh the persisted daily commit history twice a day so each day is
-	// captured before it rolls out of the GitHub commit-search window.
+	// Drives the refresh in src/lib/scheduled.ts, which is where the cadence is explained.
 	"triggers": {
 		"crons": ["0 */12 * * *"],
 	},
