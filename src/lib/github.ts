@@ -1,10 +1,12 @@
 import { Temporal } from 'temporal-polyfill';
 import { getInstallationToken, type GithubAppEnv } from './githubApp';
 import {
-	cloudflareStore,
+	readCommitHistory,
+	readSnapshot,
+	writeCommitCounts,
+	writeSnapshot,
 	type CommitHistory,
 	type D1Database,
-	type GithubStore,
 	type KVNamespace,
 	type LanguageShare,
 	type Snapshot,
@@ -216,16 +218,16 @@ const toStats = (snapshot: Snapshot, dailyCommits: number[]): GithubStats => ({
 	log: snapshot.log,
 });
 
-const readActivity = async (store: GithubStore, now: Temporal.Instant): Promise<number[]> =>
-	commitSeries(await store.readCommitHistory(activityWindowStart(now)), now, ACTIVITY_DAYS);
+const readActivity = async (env: GithubEnv, now: Temporal.Instant): Promise<number[]> =>
+	commitSeries(await readCommitHistory(env.DB, activityWindowStart(now)), now, ACTIVITY_DAYS);
 
 const readFallbackStats = async (
-	store: GithubStore,
+	env: GithubEnv,
 	now: Temporal.Instant,
 ): Promise<GithubStats | null> => {
-	const snapshot = await store.readSnapshot();
+	const snapshot = await readSnapshot(env.DB, env.GITHUB_CACHE);
 	if (!snapshot) return null;
-	return toStats(snapshot, await readActivity(store, now));
+	return toStats(snapshot, await readActivity(env, now));
 };
 
 /**
@@ -236,7 +238,6 @@ const readFallbackStats = async (
 export const fetchGithubStats = async (
 	env: GithubEnv,
 	now = Temporal.Now.instant(),
-	store: GithubStore = cloudflareStore(env.DB, env.GITHUB_CACHE),
 ): Promise<GithubStats | null> => {
 	try {
 		const token = await getInstallationToken(env, now);
@@ -246,15 +247,15 @@ export const fetchGithubStats = async (
 			request(`/users/${USER}/events/public?per_page=100`, token).then(parseEvents),
 			fetchRecentCommitCounts(token, now),
 		]);
-		await store.writeCommitCounts(freshCounts, retentionCutoff(now));
-		const dailyCommits = await readActivity(store, now);
+		await writeCommitCounts(env.DB, freshCounts, retentionCutoff(now));
+		const dailyCommits = await readActivity(env, now);
 		const snapshot = buildSnapshot(user, repos, events);
-		await store.writeSnapshot(snapshot);
+		await writeSnapshot(env.DB, env.GITHUB_CACHE, snapshot);
 		return toStats(snapshot, dailyCommits);
 	} catch (error) {
 		console.error('[github] fetch failed:', error);
 		try {
-			return await readFallbackStats(store, now);
+			return await readFallbackStats(env, now);
 		} catch (fallbackError) {
 			console.error('[github] fallback read failed:', fallbackError);
 			return null;
