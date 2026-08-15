@@ -1,5 +1,5 @@
 ---
-import BootReticle from './svg/BootReticle.astro';
+import BootReticle from '../assets/bootReticle.svg';
 ---
 
 <div id="boot" aria-hidden="true">
@@ -9,7 +9,7 @@ import BootReticle from './svg/BootReticle.astro';
 	<span class="boot-corner br"></span>
 
 	<div class="boot-inner">
-		<BootReticle />
+		<BootReticle class="reticle" />
 
 		<div class="boot-readout">
 			<span class="boot-status">SYSTEM STARTUP</span>
@@ -57,6 +57,53 @@ import BootReticle from './svg/BootReticle.astro';
 		flex-direction: column;
 		align-items: center;
 		gap: 1.25rem;
+	}
+
+	/* The reticle is an imported SVG, so only its root carries a scope; the parts
+	   inside it are reached from here. Each ring flickers or sweeps in on its own
+	   delay, so the assembly reads as an instrument coming up. */
+	#boot .reticle {
+		overflow: visible;
+		filter: drop-shadow(0 0 5px rgba(255, 153, 0, 0.4));
+	}
+	#boot .ring-outer {
+		opacity: 0;
+		transform-origin: 100px 100px;
+		animation:
+			boot-flicker-in 0.4s step-end 0.1s forwards,
+			boot-rotate 6s linear infinite;
+	}
+	#boot .ring-static {
+		opacity: 0;
+		animation: boot-flicker-in 0.3s step-end 0.2s forwards;
+	}
+	#boot .ring-inner {
+		stroke-dasharray: 390;
+		stroke-dashoffset: 390;
+		animation: boot-draw 0.5s steps(9, end) forwards;
+	}
+	#boot .ring-core {
+		opacity: 0;
+		transform-origin: 100px 100px;
+		animation:
+			boot-flicker-in 0.3s step-end 0.5s forwards,
+			boot-rotate-rev 9s linear infinite;
+	}
+	#boot .ticks {
+		opacity: 0;
+		animation: boot-flicker-in 0.4s step-end 0.25s forwards;
+	}
+	#boot .cardinals {
+		opacity: 0;
+		animation: boot-flicker-in 0.3s step-end 0.35s forwards;
+	}
+	#boot .crosshair {
+		opacity: 0;
+		animation: boot-flicker-in 0.3s step-end 0.45s forwards;
+	}
+	#boot .core-dot {
+		opacity: 0;
+		animation: boot-blink-in 0.3s step-end 0.6s forwards;
 	}
 
 	#boot .boot-readout {
@@ -150,6 +197,41 @@ import BootReticle from './svg/BootReticle.astro';
 		animation-delay: 0.4s;
 	}
 
+	@keyframes boot-flicker-in {
+		0% {
+			opacity: 0;
+		}
+		35% {
+			opacity: 0.9;
+		}
+		50% {
+			opacity: 0.2;
+		}
+		65%,
+		100% {
+			opacity: 0.85;
+		}
+	}
+	@keyframes boot-blink-in {
+		to {
+			opacity: 1;
+		}
+	}
+	@keyframes boot-rotate {
+		to {
+			transform: rotate(1turn);
+		}
+	}
+	@keyframes boot-rotate-rev {
+		to {
+			transform: rotate(-1turn);
+		}
+	}
+	@keyframes boot-draw {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
 	@keyframes boot-progress {
 		to {
 			transform: scaleX(1);

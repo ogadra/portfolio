@@ -1,0 +1,30 @@
+<!-- No viewBox: the tile is laid out in user units that must stay 1:1 with CSS
+	pixels, so the field repeats at a fixed size rather than scaling with the
+	element. The nominal width and height exist only so the import can read the
+	image's dimensions; the stylesheet stretches it to fill its parent. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="51.96">
+	<defs>
+		<pattern id="nerv-hex" patternUnits="userSpaceOnUse" width="90" height="51.96">
+			<g fill="none" stroke="var(--nerv-orange)" stroke-width="1">
+				<polygon points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98" />
+				<polygon
+					points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98"
+					transform="translate(90 0)"
+				/>
+				<polygon
+					points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98"
+					transform="translate(0 51.96)"
+				/>
+				<polygon
+					points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98"
+					transform="translate(90 51.96)"
+				/>
+				<polygon
+					points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98"
+					transform="translate(45 25.98)"
+				/>
+			</g>
+		</pattern>
+	</defs>
+	<rect width="100%" height="100%" fill="url(#nerv-hex)" />
+</svg>

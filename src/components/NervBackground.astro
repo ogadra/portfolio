@@ -1,5 +1,5 @@
 ---
-import HexField from './svg/HexField.astro';
+import HexField from '../assets/hexField.svg';
 
 const BLIPS = [
 	{ x: 22, y: 34, c: 'cyan', d: 0 },
@@ -11,7 +11,7 @@ const BLIPS = [
 ---
 
 <div class="nerv-background" aria-hidden="true">
-	<HexField />
+	<HexField class="hex-layer" />
 
 	<div class="rings"></div>
 	<div class="sweep"></div>
@@ -45,6 +45,23 @@ const BLIPS = [
 		z-index: 0;
 		overflow: hidden;
 		pointer-events: none;
+	}
+
+	.hex-layer {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		animation: hex-breathe 8s ease-in-out infinite;
+	}
+	@keyframes hex-breathe {
+		0%,
+		100% {
+			opacity: 0.06;
+		}
+		50% {
+			opacity: 0.12;
+		}
 	}
 
 

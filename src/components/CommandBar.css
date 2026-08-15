@@ -20,6 +20,11 @@
 	align-items: center;
 	gap: 0.65rem;
 }
+.brand-mark {
+	width: 30px;
+	height: 30px;
+	filter: drop-shadow(0 0 3px rgba(255, 153, 0, 0.5));
+}
 .brand-text {
 	display: flex;
 	flex-direction: column;

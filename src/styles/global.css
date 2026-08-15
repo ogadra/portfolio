@@ -150,20 +150,3 @@ body::after {
 		opacity: 0.6;
 	}
 }
-
-/* Shared by the boot overlay and the reticle it draws, so it outlives either. */
-@keyframes boot-flicker-in {
-	0% {
-		opacity: 0;
-	}
-	35% {
-		opacity: 0.9;
-	}
-	50% {
-		opacity: 0.2;
-	}
-	65%,
-	100% {
-		opacity: 0.85;
-	}
-}

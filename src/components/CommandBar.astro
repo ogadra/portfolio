@@ -1,12 +1,12 @@
 ---
 import { m } from '../paraglide/messages.js';
-import BrandMark from './svg/BrandMark.astro';
+import BrandMark from '../assets/brandMark.svg';
 ---
 
 <header class="command-bar">
 	<div class="primary">
 		<div class="brand">
-			<BrandMark />
+			<BrandMark class="brand-mark" aria-hidden="true" />
 			<div class="brand-text">
 				<span class="brand-sub">{m.brand_sub()}</span>
 				<a class="brand-name" href="/">ogadra.com</a>
