@@ -1,5 +1,5 @@
 import { Temporal } from 'temporal-polyfill';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
 	commitSeries,
 	eventLabel,
@@ -98,10 +98,11 @@ describe('fetchGithubStats', () => {
 
 		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 
+		assert(stats, 'the API answered, so the live path should have produced stats');
 		expect(stats).toMatchObject({ publicRepos: 42, followers: 7, recentCommits: 5 });
-		expect(stats?.dailyCommits.at(-1)).toBe(3);
-		expect(stats?.dailyCommits.at(-2)).toBe(2);
-		expect(stats?.log[0]).toEqual({ label: 'PUSH ogadra/x', occurredAt: '2026-07-05T00:00:00Z' });
+		expect(stats.dailyCommits.at(-1)).toBe(3);
+		expect(stats.dailyCommits.at(-2)).toBe(2);
+		expect(stats.log[0]).toEqual({ label: 'PUSH ogadra/x', occurredAt: '2026-07-05T00:00:00Z' });
 	});
 
 	it('returns before either write settles', async () => {
@@ -147,7 +148,8 @@ describe('fetchGithubStats', () => {
 
 		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 
-		expect(stats?.dailyCommits.at(-3)).toBe(5);
+		assert(stats, 'the API answered, so the live path should have produced stats');
+		expect(stats.dailyCommits.at(-3)).toBe(5);
 	});
 
 	it('pads the series to the full window when the store holds fewer days', async () => {
@@ -156,9 +158,10 @@ describe('fetchGithubStats', () => {
 
 		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 
-		expect(stats?.dailyCommits).toHaveLength(14);
-		expect(stats?.dailyCommits.at(-4)).toBe(7);
-		expect(stats?.recentCommits).toBe(12);
+		assert(stats, 'the API answered, so the live path should have produced stats');
+		expect(stats.dailyCommits).toHaveLength(14);
+		expect(stats.dailyCommits.at(-4)).toBe(7);
+		expect(stats.recentCommits).toBe(12);
 	});
 
 	it('still returns the live stats when a background write fails', async () => {
