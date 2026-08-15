@@ -1,23 +1,9 @@
-// Test-only data. Nothing here reaches a production render: the page falls back
-// to these values solely when the GITHUB_STATS var is set, which only the
-// Playwright servers do.
 import type { GithubStats } from './github';
 
 /**
- * Values the GITHUB_STATS var accepts. The page, the ambient env type and the
- * Playwright servers all read them from here so a typo cannot slip between them.
- */
-export const STATS_MODE = {
-	fixture: 'fixture',
-	offline: 'offline',
-} as const;
-
-export type StatsMode = (typeof STATS_MODE)[keyof typeof STATS_MODE];
-
-/**
- * Fixed stats for the browser tests, selected with the GITHUB_STATS var so a
- * Playwright run never reaches api.github.com and never depends on the rate
- * limit or on what the account did that day.
+ * Test-only data. The page serves it in place of a live fetch when GITHUB_STATS
+ * names the fixture mode, so a Playwright run never reaches api.github.com and
+ * never depends on the rate limit or on what the account did that day.
  */
 export const FIXTURE_STATS: GithubStats = {
 	publicRepos: 42,
