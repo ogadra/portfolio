@@ -69,6 +69,14 @@ const apiFetch = vi.fn((url: string, _init?: RequestInit) => {
 	return Promise.resolve(ok({ public_repos: 42, followers: 7 }));
 });
 
+const waitUntil = vi.fn((_promise: Promise<unknown>) => {});
+
+/** Awaits the writes that were handed off, so an assertion can see them land. */
+const settleBackgroundWork = () => Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+
+/** Never settles, so awaiting it would hang rather than merely slow a test down. */
+const never = () => new Promise<never>(() => {});
+
 beforeEach(() => {
 	vi.spyOn(console, 'error').mockImplementation(() => {});
 	store.readCommitHistory.mockResolvedValue({});
@@ -84,16 +92,37 @@ afterEach(() => {
 });
 
 describe('fetchGithubStats', () => {
-	it('returns live stats and stores a snapshot', async () => {
+	it('returns live stats built from the API and the stored history', async () => {
 		vi.stubGlobal('fetch', apiFetch);
 		store.readCommitHistory.mockResolvedValue({ '2026-07-05': 3, '2026-07-04': 2 });
 
-		const stats = await fetchGithubStats(unconfiguredEnv, NOW);
+		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 
 		expect(stats).toMatchObject({ publicRepos: 42, followers: 7, recentCommits: 5 });
 		expect(stats?.dailyCommits.at(-1)).toBe(3);
 		expect(stats?.dailyCommits.at(-2)).toBe(2);
 		expect(stats?.log[0]).toEqual({ label: 'PUSH ogadra/x', occurredAt: '2026-07-05T00:00:00Z' });
+	});
+
+	it('returns before either write settles', async () => {
+		vi.stubGlobal('fetch', apiFetch);
+		store.writeCommitCounts.mockReturnValue(never());
+		store.writeSnapshot.mockReturnValue(never());
+
+		expect(await fetchGithubStats(unconfiguredEnv, waitUntil, NOW)).toMatchObject({
+			publicRepos: 42,
+		});
+	});
+
+	it('hands both writes to the runtime to finish in the background', async () => {
+		vi.stubGlobal('fetch', apiFetch);
+
+		await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
+		await settleBackgroundWork();
+
+		// the search reaches back RECENT_DAYS, so a day is stored before it rolls
+		// out of the window and can only be read back from D1
+		expect(store.writeCommitCounts).toHaveBeenCalledWith(DB, DAY_COUNTS, '2025-05-31');
 		expect(store.writeSnapshot).toHaveBeenCalledWith(
 			DB,
 			GITHUB_CACHE,
@@ -101,34 +130,46 @@ describe('fetchGithubStats', () => {
 		);
 	});
 
-	it('writes every day the commit search returned', async () => {
+	it('reads the sparkline window once, before the write', async () => {
 		vi.stubGlobal('fetch', apiFetch);
 
-		await fetchGithubStats(unconfiguredEnv, NOW);
+		await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
+		await settleBackgroundWork();
 
-		// the search reaches back RECENT_DAYS, so a day is stored before it rolls
-		// out of the window and can only be read back from D1
-		expect(store.writeCommitCounts).toHaveBeenCalledWith(DB, DAY_COUNTS, expect.any(String));
+		expect(store.readCommitHistory).toHaveBeenCalledTimes(1);
+		expect(store.readCommitHistory).toHaveBeenCalledWith(DB, '2026-06-22');
 	});
 
-	it('prunes below the retention cutoff and reads back only the sparkline window', async () => {
+	it('keeps the stored count when the search no longer reaches that day', async () => {
 		vi.stubGlobal('fetch', apiFetch);
+		// the API reports 0 for 07-03, the store still holds the 5 it recorded then
+		store.readCommitHistory.mockResolvedValue({ '2026-07-03': 5 });
 
-		await fetchGithubStats(unconfiguredEnv, NOW);
+		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 
-		expect(store.writeCommitCounts).toHaveBeenCalledWith(DB, expect.anything(), '2025-05-31');
-		expect(store.readCommitHistory).toHaveBeenCalledWith(DB, '2026-06-22');
+		expect(stats?.dailyCommits.at(-3)).toBe(5);
 	});
 
 	it('pads the series to the full window when the store holds fewer days', async () => {
 		vi.stubGlobal('fetch', apiFetch);
 		store.readCommitHistory.mockResolvedValue({ '2026-07-02': 7 });
 
-		const stats = await fetchGithubStats(unconfiguredEnv, NOW);
+		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 
 		expect(stats?.dailyCommits).toHaveLength(14);
 		expect(stats?.dailyCommits.at(-4)).toBe(7);
-		expect(stats?.recentCommits).toBe(7);
+		expect(stats?.recentCommits).toBe(12);
+	});
+
+	it('still returns the live stats when a background write fails', async () => {
+		vi.stubGlobal('fetch', apiFetch);
+		store.writeSnapshot.mockRejectedValue(new Error('D1 unavailable'));
+
+		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
+		await settleBackgroundWork();
+
+		expect(stats).toMatchObject({ publicRepos: 42 });
+		expect(store.writeCommitCounts).toHaveBeenCalled();
 	});
 
 	it('falls back when the API returns an unexpected shape', async () => {
@@ -142,38 +183,31 @@ describe('fetchGithubStats', () => {
 		);
 		store.readSnapshot.mockResolvedValue(STORED_SNAPSHOT);
 
-		expect(await fetchGithubStats(unconfiguredEnv, NOW)).toMatchObject({ publicRepos: 41 });
+		expect(await fetchGithubStats(unconfiguredEnv, waitUntil, NOW)).toMatchObject({
+			publicRepos: 41,
+		});
 	});
 
 	it('falls back to the stored snapshot when the API fails', async () => {
 		vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('rate limited')));
 		store.readSnapshot.mockResolvedValue(STORED_SNAPSHOT);
 
-		expect(await fetchGithubStats(unconfiguredEnv, NOW)).toMatchObject({ publicRepos: 41 });
+		expect(await fetchGithubStats(unconfiguredEnv, waitUntil, NOW)).toMatchObject({
+			publicRepos: 41,
+		});
 	});
 
 	it('returns null when the API fails and no snapshot exists', async () => {
 		vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('rate limited')));
 
-		expect(await fetchGithubStats(unconfiguredEnv, NOW)).toBeNull();
-	});
-
-	it('falls back to the stored snapshot when a store write fails', async () => {
-		vi.stubGlobal('fetch', apiFetch);
-		store.writeSnapshot.mockRejectedValue(new Error('D1 unavailable'));
-		store.readSnapshot.mockResolvedValue(STORED_SNAPSHOT);
-
-		expect(await fetchGithubStats(unconfiguredEnv, NOW)).toMatchObject({
-			publicRepos: 41,
-			followers: 6,
-		});
+		expect(await fetchGithubStats(unconfiguredEnv, waitUntil, NOW)).toBeNull();
 	});
 
 	it('returns null when the fallback read fails too', async () => {
 		vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('rate limited')));
 		store.readSnapshot.mockRejectedValue(new Error('D1 unavailable'));
 
-		expect(await fetchGithubStats(unconfiguredEnv, NOW)).toBeNull();
+		expect(await fetchGithubStats(unconfiguredEnv, waitUntil, NOW)).toBeNull();
 	});
 });
 
@@ -213,7 +247,7 @@ describe('fetchGithubStats app auth', () => {
 			),
 		);
 
-		await fetchGithubStats(configuredEnv, NOW);
+		await fetchGithubStats(configuredEnv, waitUntil, NOW);
 
 		expect(authHeaders()).toEqual(['Bearer minted-token']);
 	});
@@ -221,7 +255,7 @@ describe('fetchGithubStats app auth', () => {
 	it('sends no authorization header when app auth is not configured', async () => {
 		vi.stubGlobal('fetch', apiFetch);
 
-		await fetchGithubStats(unconfiguredEnv, NOW);
+		await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 
 		expect(authHeaders()).toEqual([undefined]);
 	});

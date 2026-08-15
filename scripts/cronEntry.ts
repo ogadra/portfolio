@@ -16,6 +16,6 @@ interface ExecutionContext {
 export default {
 	fetch: astro.fetch,
 	scheduled(_event: unknown, env: GithubEnv, ctx: ExecutionContext) {
-		ctx.waitUntil(fetchGithubStats(env));
+		ctx.waitUntil(fetchGithubStats(env, (promise) => ctx.waitUntil(promise)));
 	},
 };
