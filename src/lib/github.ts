@@ -1,23 +1,29 @@
 import { Temporal } from 'temporal-polyfill';
-import { commitSeries, utcDay, type CommitHistory } from './commitHistory';
+import { FETCH_TIMEOUT_MS, GITHUB_API, githubHeaders, isRecord } from './githubApi';
 import { getInstallationToken, type GithubAppEnv } from './githubApp';
-import { eventLabel, languageRatio, type LanguageShare } from './githubStats';
 import {
-	cloudflareStore,
+	readCommitHistory,
+	readSnapshot,
+	writeCommitCounts,
+	writeSnapshot,
+	type CommitHistory,
 	type D1Database,
-	type GithubStore,
 	type KVNamespace,
+	type LanguageShare,
 	type Snapshot,
 } from './githubStore';
 
-const API = 'https://api.github.com';
+// languageRatio returns it and GithubStats carries it, so a caller has to be
+// able to name it without reaching into the store.
+export type { LanguageShare };
+
 const USER = 'ogadra';
-const FETCH_TIMEOUT_MS = 2500;
 /** Days of commit history the sparkline shows. */
 export const ACTIVITY_DAYS = 14;
 const LOG_LINES = 12;
 const RECENT_DAYS = 3;
 const RETENTION_DAYS = 400;
+const TOP_LANGUAGES = 8;
 
 export interface GithubStats {
 	publicRepos: number;
@@ -48,8 +54,62 @@ interface GithubEvent {
 	repo: { name: string };
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === 'object' && value !== null;
+/**
+ * The UTC day an instant falls in. Commit counts are keyed by the day GitHub's
+ * commit search reports them under, which is UTC regardless of where the run
+ * happens, and `PlainDate` stringifies to exactly that `YYYY-MM-DD` key.
+ */
+const utcDay = (now: Temporal.Instant): Temporal.PlainDate =>
+	now.toZonedDateTimeISO('UTC').toPlainDate();
+
+export const commitSeries = (
+	history: CommitHistory,
+	now: Temporal.Instant,
+	days: number,
+): number[] => {
+	const today = utcDay(now);
+	return Array.from(
+		{ length: days },
+		(_, i) => history[today.subtract({ days: days - 1 - i }).toString()] ?? 0,
+	);
+};
+
+export const languageRatio = (languages: readonly (string | null)[], top = 3): LanguageShare[] => {
+	const counts = new Map<string, number>();
+	for (const lang of languages) {
+		if (!lang) continue;
+		counts.set(lang, (counts.get(lang) ?? 0) + 1);
+	}
+	const total = [...counts.values()].reduce((a, b) => a + b, 0);
+	if (total === 0) return [];
+	return [...counts.entries()]
+		.toSorted((a, b) => b[1] - a[1])
+		.slice(0, top)
+		.map(([name, count]) => ({ name, ratio: Math.round((count / total) * 100) }));
+};
+
+/** Every event type the public events API delivers, as documented by GitHub. */
+const EVENT_LABELS: Record<string, string> = {
+	CommitCommentEvent: 'COMMENT',
+	CreateEvent: 'CREATE',
+	DeleteEvent: 'DELETE',
+	ForkEvent: 'FORK',
+	GollumEvent: 'WIKI',
+	IssueCommentEvent: 'COMMENT',
+	IssuesEvent: 'ISSUE',
+	MemberEvent: 'MEMBER',
+	PublicEvent: 'PUBLIC',
+	PullRequestEvent: 'PULL_REQ',
+	PullRequestReviewCommentEvent: 'REVIEW',
+	PullRequestReviewEvent: 'REVIEW',
+	PullRequestReviewThreadEvent: 'REVIEW',
+	PushEvent: 'PUSH',
+	ReleaseEvent: 'RELEASE',
+	SponsorshipEvent: 'SPONSOR',
+	WatchEvent: 'STAR',
+};
+
+export const eventLabel = (type: string): string => EVENT_LABELS[type] ?? type;
 
 const unexpected = (shape: string): never => {
 	throw new Error(`GitHub API returned an unexpected ${shape}`);
@@ -102,13 +162,8 @@ const dayCountPath = (day: string): string =>
 	`/search/commits?q=${encodeURIComponent(`author:${USER} author-date:${day}`)}&per_page=1`;
 
 const request = async (path: string, token: string | undefined): Promise<unknown> => {
-	const headers: Record<string, string> = {
-		accept: 'application/vnd.github+json',
-		'user-agent': 'ogadra.com',
-	};
-	if (token) headers.authorization = `Bearer ${token}`;
-	const res = await fetch(`${API}${path}`, {
-		headers,
+	const res = await fetch(`${GITHUB_API}${path}`, {
+		headers: githubHeaders(token),
 		signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
 	});
 	if (!res.ok) throw new Error(`GitHub API responded with ${res.status}`);
@@ -141,7 +196,7 @@ const buildSnapshot = (user: GithubUser, repos: GithubRepo[], events: GithubEven
 	followers: user.followers,
 	languages: languageRatio(
 		repos.map((r) => r.language),
-		8,
+		TOP_LANGUAGES,
 	),
 	log: events.slice(0, LOG_LINES).map((e) => ({
 		label: `${eventLabel(e.type)} ${e.repo.name}`,
@@ -158,45 +213,79 @@ const toStats = (snapshot: Snapshot, dailyCommits: number[]): GithubStats => ({
 	log: snapshot.log,
 });
 
-const readActivity = async (store: GithubStore, now: Temporal.Instant): Promise<number[]> =>
-	commitSeries(await store.readCommitHistory(activityWindowStart(now)), now, ACTIVITY_DAYS);
+/**
+ * Merges the days the commit search just reported into the stored ones. Taking
+ * the larger count matches what the upsert does in SQL: a day the search no
+ * longer reaches comes back as 0, and that must not erase what is on record.
+ */
+const mergeCounts = (stored: CommitHistory, fresh: CommitHistory): CommitHistory => ({
+	...stored,
+	...Object.fromEntries(
+		Object.entries(fresh).map(([day, count]) => [day, Math.max(stored[day] ?? 0, count)]),
+	),
+});
+
+/**
+ * Hands a promise to the runtime so it survives past the response. Cloudflare
+ * cancels anything still pending otherwise.
+ */
+export type WaitUntil = (promise: Promise<unknown>) => void;
+
+/** Records the refresh. Failing to store it costs the next call, not this one. */
+const persist = async (
+	env: GithubEnv,
+	snapshot: Snapshot,
+	freshCounts: CommitHistory,
+	cutoffDay: string,
+): Promise<void> => {
+	const writes = await Promise.allSettled([
+		writeCommitCounts(env.DB, freshCounts, cutoffDay),
+		writeSnapshot(env.DB, env.GITHUB_CACHE, snapshot),
+	]);
+	for (const write of writes) {
+		if (write.status === 'rejected') console.error('[github] store write failed:', write.reason);
+	}
+};
 
 const readFallbackStats = async (
-	store: GithubStore,
+	env: GithubEnv,
 	now: Temporal.Instant,
 ): Promise<GithubStats | null> => {
-	const snapshot = await store.readSnapshot();
+	const snapshot = await readSnapshot(env.DB, env.GITHUB_CACHE);
 	if (!snapshot) return null;
-	return toStats(snapshot, await readActivity(store, now));
+	const stored = await readCommitHistory(env.DB, activityWindowStart(now));
+	return toStats(snapshot, commitSeries(stored, now, ACTIVITY_DAYS));
 };
 
 /**
  * Fetches live GitHub stats on every call, authenticated as the GitHub App
- * installation when configured. The stored snapshot is read only when the live
- * fetch fails (rate limits, timeouts, store writes).
+ * installation when configured. The answer comes from what the API returned
+ * plus the history already on record, so the response never waits on a write;
+ * the refresh is stored in the background. The snapshot is read back only when
+ * the live fetch fails (rate limits, timeouts).
  */
 export const fetchGithubStats = async (
 	env: GithubEnv,
+	waitUntil: WaitUntil,
 	now = Temporal.Now.instant(),
-	store: GithubStore = cloudflareStore(env.DB, env.GITHUB_CACHE),
 ): Promise<GithubStats | null> => {
 	try {
 		const token = await getInstallationToken(env, now);
-		const [user, repos, events, freshCounts] = await Promise.all([
+		const [user, repos, events, freshCounts, storedHistory] = await Promise.all([
 			request(`/users/${USER}`, token).then(parseUser),
 			request(`/users/${USER}/repos?per_page=100&sort=pushed`, token).then(parseRepos),
 			request(`/users/${USER}/events/public?per_page=100`, token).then(parseEvents),
 			fetchRecentCommitCounts(token, now),
+			readCommitHistory(env.DB, activityWindowStart(now)),
 		]);
-		await store.writeCommitCounts(freshCounts, retentionCutoff(now));
-		const dailyCommits = await readActivity(store, now);
 		const snapshot = buildSnapshot(user, repos, events);
-		await store.writeSnapshot(snapshot);
-		return toStats(snapshot, dailyCommits);
+		waitUntil(persist(env, snapshot, freshCounts, retentionCutoff(now)));
+		const history = mergeCounts(storedHistory, freshCounts);
+		return toStats(snapshot, commitSeries(history, now, ACTIVITY_DAYS));
 	} catch (error) {
 		console.error('[github] fetch failed:', error);
 		try {
-			return await readFallbackStats(store, now);
+			return await readFallbackStats(env, now);
 		} catch (fallbackError) {
 			console.error('[github] fallback read failed:', fallbackError);
 			return null;
