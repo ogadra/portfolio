@@ -7,6 +7,7 @@ import {
 	languageRatio,
 	type GithubEnv,
 } from './github';
+import { configuredAppEnv } from './githubApp.fixture';
 import type { D1Database, KVNamespace, Snapshot } from './githubStore';
 
 /**
@@ -175,14 +176,33 @@ describe('fetchGithubStats', () => {
 		expect(store.writeCommitCounts).toHaveBeenCalled();
 	});
 
-	it('falls back when the API returns an unexpected shape', async () => {
+	// each parser guards a different endpoint, so a shape check that regressed in
+	// one of them would otherwise go unnoticed until the page showed nonsense
+	it.each([
+		['user', '/users/ogadra', { public_repos: 'many', followers: 7 }],
+		['repo list', '/repos?', { not: 'an array' }],
+		['repo', '/repos?', [{ language: 42 }]],
+		['event list', '/events/public', { not: 'an array' }],
+		['event', '/events/public', [{ type: 'PushEvent', created_at: 1, repo: { name: 'x' } }]],
+		['event repo', '/events/public', [{ type: 'PushEvent', created_at: '2026-07-05', repo: {} }]],
+		['commit count', '/search/commits', { total_count: 'lots' }],
+	])('falls back when the %s comes back in an unexpected shape', async (_shape, path, body) => {
 		vi.stubGlobal(
 			'fetch',
-			vi.fn((url: string) =>
-				url.endsWith('/users/ogadra')
-					? Promise.resolve(ok({ public_repos: 'many', followers: 7 }))
-					: apiFetch(url),
-			),
+			vi.fn((url: string) => (url.includes(path) ? Promise.resolve(ok(body)) : apiFetch(url))),
+		);
+		store.readSnapshot.mockResolvedValue(STORED_SNAPSHOT);
+
+		expect(await fetchGithubStats(unconfiguredEnv, waitUntil, NOW)).toMatchObject({
+			publicRepos: 41,
+		});
+	});
+
+	it('falls back when the API refuses the request', async () => {
+		// the rate limit answers 403, which is the reason app auth exists at all
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(() => Promise.resolve({ ok: false, status: 403 })),
 		);
 		store.readSnapshot.mockResolvedValue(STORED_SNAPSHOT);
 
@@ -224,23 +244,7 @@ describe('fetchGithubStats app auth', () => {
 	];
 
 	it('sends the minted installation token on every API request', async () => {
-		const { privateKey } = (await crypto.subtle.generateKey(
-			{
-				name: 'RSASSA-PKCS1-v1_5',
-				modulusLength: 2048,
-				publicExponent: new Uint8Array([1, 0, 1]),
-				hash: 'SHA-256',
-			},
-			true,
-			['sign', 'verify'],
-		)) as CryptoKeyPair;
-		const pkcs8 = new Uint8Array(await crypto.subtle.exportKey('pkcs8', privateKey));
-		const configuredEnv: GithubEnv = {
-			...unconfiguredEnv,
-			GITHUB_APP_ID: '12345',
-			GITHUB_APP_PRIVATE_KEY: `-----BEGIN PRIVATE KEY-----\n${btoa(String.fromCharCode(...pkcs8))}\n-----END PRIVATE KEY-----`,
-			GITHUB_APP_INSTALLATION_ID: '67890',
-		};
+		const configuredEnv: GithubEnv = { ...unconfiguredEnv, ...(await configuredAppEnv()) };
 		vi.stubGlobal(
 			'fetch',
 			vi.fn((url: string, init?: RequestInit) =>
@@ -268,6 +272,23 @@ describe('commitSeries', () => {
 	it('builds an oldest-to-newest series with zeros for missing days', () => {
 		const history = { '2026-07-07': 4, '2026-07-05': 6 };
 		expect(commitSeries(history, at('2026-07-07T12:00:00Z'), 4)).toEqual([0, 6, 0, 4]);
+	});
+
+	it('leaves out days older than the window', () => {
+		const history = { '2026-07-07': 4, '2026-07-01': 9 };
+		expect(commitSeries(history, at('2026-07-07T12:00:00Z'), 3)).toEqual([0, 0, 4]);
+	});
+
+	it('ends on the UTC day, not the local one', () => {
+		const history = { '2026-07-07': 4, '2026-07-08': 8 };
+		// both instants fall on 07-07 in UTC, so both series end on its count
+		expect(commitSeries(history, at('2026-07-07T00:00:00Z'), 2)).toEqual([0, 4]);
+		expect(commitSeries(history, at('2026-07-07T23:59:59Z'), 2)).toEqual([0, 4]);
+		expect(commitSeries(history, at('2026-07-08T00:00:00Z'), 2)).toEqual([4, 8]);
+	});
+
+	it('returns just today for a one-day window', () => {
+		expect(commitSeries({ '2026-07-07': 4 }, at('2026-07-07T12:00:00Z'), 1)).toEqual([4]);
 	});
 });
 

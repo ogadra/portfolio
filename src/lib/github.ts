@@ -1,4 +1,5 @@
 import { Temporal } from 'temporal-polyfill';
+import { FETCH_TIMEOUT_MS, GITHUB_API, githubHeaders, isRecord } from './githubApi';
 import { getInstallationToken, type GithubAppEnv } from './githubApp';
 import {
 	readCommitHistory,
@@ -12,9 +13,7 @@ import {
 	type Snapshot,
 } from './githubStore';
 
-const API = 'https://api.github.com';
 const USER = 'ogadra';
-const FETCH_TIMEOUT_MS = 2500;
 /** Days of commit history the sparkline shows. */
 export const ACTIVITY_DAYS = 14;
 const LOG_LINES = 12;
@@ -108,9 +107,6 @@ const EVENT_LABELS: Record<string, string> = {
 
 export const eventLabel = (type: string): string => EVENT_LABELS[type] ?? type;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === 'object' && value !== null;
-
 const unexpected = (shape: string): never => {
 	throw new Error(`GitHub API returned an unexpected ${shape}`);
 };
@@ -162,13 +158,8 @@ const dayCountPath = (day: string): string =>
 	`/search/commits?q=${encodeURIComponent(`author:${USER} author-date:${day}`)}&per_page=1`;
 
 const request = async (path: string, token: string | undefined): Promise<unknown> => {
-	const headers: Record<string, string> = {
-		accept: 'application/vnd.github+json',
-		'user-agent': 'ogadra.com',
-	};
-	if (token) headers.authorization = `Bearer ${token}`;
-	const res = await fetch(`${API}${path}`, {
-		headers,
+	const res = await fetch(`${GITHUB_API}${path}`, {
+		headers: githubHeaders(token),
 		signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
 	});
 	if (!res.ok) throw new Error(`GitHub API responded with ${res.status}`);
