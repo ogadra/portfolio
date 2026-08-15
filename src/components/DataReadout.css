@@ -1,7 +1,7 @@
 .readout {
 	display: flex;
 	flex-direction: column;
-	/* stretches over the HUD's centred grid row so the blocks fill the column */
+	/* the HUD centres its grid row, so a column that should fill it says so here */
 	align-self: stretch;
 	justify-content: center;
 	gap: 0.75rem;

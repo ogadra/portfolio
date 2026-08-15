@@ -13,8 +13,8 @@ const message = [
 	`GITHUB ${PROFILE.github.label}`,
 	`TWITTER ${PROFILE.twitter.label}`,
 	`PUBLIC REPOS ${stats?.publicRepos ?? '--'}`,
-	'STACK TypeScript / Go / HCL',
-	'CLASSIFICATION SOFTWARE ENGINEER',
+	`STACK ${PROFILE.stack.join(' / ')}`,
+	`CLASSIFICATION ${PROFILE.role}`,
 	`SITE ${PROFILE.siteName} / ASTRO ON CLOUDFLARE WORKERS`,
 ].join('  ///  ');
 ---

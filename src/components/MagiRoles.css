@@ -1,7 +1,7 @@
 .magi {
 	display: flex;
 	flex-direction: column;
-	/* stretches over the HUD's centred grid row so the units fill the column */
+	/* the HUD centres its grid row, so a column that should fill it says so here */
 	align-self: stretch;
 	justify-content: center;
 	gap: 0.75rem;
@@ -27,12 +27,14 @@
 }
 
 .unit {
-	--accent: var(--nerv-orange);
-	--accent-soft: rgba(255, 153, 0, 0.3);
 	padding: 0.7rem 0.8rem 0.8rem;
 	border: 1px solid var(--accent-soft);
 	background: rgba(4, 4, 4, 0.92);
 	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+.unit.orange {
+	--accent: var(--nerv-orange);
+	--accent-soft: rgba(255, 153, 0, 0.3);
 }
 .unit.cyan {
 	--accent: var(--nerv-cyan);

@@ -1,6 +1,7 @@
 ---
 import SubjectReticle from '../assets/subjectReticle.svg';
 import type { GithubStats } from '../lib/github';
+import { PROFILE } from '../lib/profile';
 import { m } from '../paraglide/messages.js';
 
 interface Props {
@@ -8,9 +9,13 @@ interface Props {
 }
 
 const { stats } = Astro.props;
+
+// Instrument readout, not localisable copy: kept out of the message catalogue.
+const EYEBROW = { en: 'Subject Identification', jp: '開発者識別' };
+const STATS = { repos: 'Public Repos', followers: 'Followers', status: 'Status' };
 ---
 
-<section class="subject" id="subject">
+<section id="subject">
 	<div class="stage">
 		<SubjectReticle class="reticle" aria-hidden="true" />
 		<img
@@ -23,23 +28,23 @@ const { stats } = Astro.props;
 	</div>
 	<div class="identity">
 		<p class="eyebrow" aria-hidden="true">
-			<span class="eyebrow-en">{m.subject_eyebrow_en()}</span>
-			<span class="eyebrow-jp">{m.subject_eyebrow_jp()}</span>
+			<span class="eyebrow-en">{EYEBROW.en}</span>
+			<span class="eyebrow-jp">{EYEBROW.jp}</span>
 		</p>
 		<h1>OGADRA</h1>
-		<p class="classification">{m.subject_classification()}</p>
+		<p class="classification">CLASSIFICATION // {PROFILE.role}</p>
 		<div class="stat-boxes" aria-hidden="true">
 			<div class="stat orange">
-				<span class="stat-label">{m.stat_public_repos()}</span>
+				<span class="stat-label">{STATS.repos}</span>
 				<span class="stat-value">{stats?.publicRepos ?? '--'}</span>
 			</div>
 			<div class="stat cyan">
-				<span class="stat-label">{m.stat_followers()}</span>
+				<span class="stat-label">{STATS.followers}</span>
 				<span class="stat-value">{stats?.followers ?? '--'}</span>
 			</div>
 			<div class="stat green">
-				<span class="stat-label">{m.stat_status()}</span>
-				<span class="stat-value">{stats ? m.status_nominal() : m.status_offline()}</span>
+				<span class="stat-label">{STATS.status}</span>
+				<span class="stat-value">{stats ? 'NOMINAL' : 'OFFLINE'}</span>
 			</div>
 		</div>
 	</div>

@@ -25,7 +25,7 @@ const { stats } = Astro.props;
 	<main class="hud-main">
 		<DataReadout stats={stats} />
 		<SubjectDisplay stats={stats} />
-		<MagiRoles languages={stats?.languages ?? []} />
+		<MagiRoles stats={stats} />
 	</main>
 	<StatusTicker stats={stats} />
 </div>
@@ -34,9 +34,9 @@ const { stats } = Astro.props;
 	// pin the radar/rings centre to the subject reticle, measured relative to this
 	// scrolling HUD root so the background stays aligned as the page scrolls
 	const root = document.querySelector<HTMLElement>('.hud-root');
-	const stage = document.querySelector<HTMLElement>('.subject .stage');
+	const stage = document.querySelector<HTMLElement>('#subject .stage');
 	if (!root || !stage) {
-		throw new Error('cannot align the radar: .hud-root or .subject .stage is missing');
+		throw new Error('cannot align the radar: .hud-root or #subject .stage is missing');
 	}
 	const alignRadar = () => {
 		const r = root.getBoundingClientRect();
@@ -44,14 +44,14 @@ const { stats } = Astro.props;
 		root.style.setProperty('--radar-cx', `${s.left + s.width / 2 - r.left}px`);
 		root.style.setProperty('--radar-cy', `${s.top + s.height / 2 - r.top}px`);
 	};
-	alignRadar();
-	requestAnimationFrame(alignRadar);
-	// browser zoom (Cmd/Ctrl +/-) reflows the layout without firing resize on
-	// every step, so watch the elements themselves instead
+	// observing delivers a first measurement, and every reflow after it: a window
+	// resize, a browser zoom step, or the portrait finally arriving all reach the
+	// two elements' own boxes
 	const ro = new ResizeObserver(alignRadar);
 	ro.observe(root);
 	ro.observe(stage);
-	window.addEventListener('resize', alignRadar);
+	// a font swapping under the identity text moves the stage without resizing
+	// anything the observer watches, so measure once more when the page settles
 	window.addEventListener('load', alignRadar);
 </script>
 

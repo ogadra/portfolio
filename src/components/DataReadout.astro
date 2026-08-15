@@ -1,6 +1,7 @@
 ---
 import { ACTIVITY_DAYS, type GithubStats } from '../lib/github';
-import { m } from '../paraglide/messages.js';
+import { formatLogStamp } from '../lib/hudClock';
+import { commitBars } from '../lib/hudPanels';
 
 interface Props {
 	stats: GithubStats | null;
@@ -8,49 +9,52 @@ interface Props {
 
 const { stats } = Astro.props;
 
-const daily = stats?.dailyCommits ?? Array.from({ length: ACTIVITY_DAYS }, () => 0);
-const maxDaily = Math.max(1, ...daily);
-const bars = daily.map((count) => ({
-	height: count === 0 ? 4 : Math.max(14, Math.round((count / maxDaily) * 100)),
-	active: count > 0,
-}));
-/** Reads the stored instant as `MM/DD HH:MM`, keeping the UTC the API reports. */
-const stamp = (occurredAt: string): string =>
-	`${occurredAt.slice(5, 10).replace('-', '/')} ${occurredAt.slice(11, 16)}`;
+// Instrument readout, not localisable copy: kept out of the message catalogue.
+const HEADS = {
+	activity: { en: 'GitHub Activity', jp: '活動記録' },
+	languages: { en: 'Language Ratio', jp: '使用言語' },
+	log: { en: 'Update Log', jp: '更新履歴' },
+};
+const OFFLINE = 'DATA LINK OFFLINE';
 
-const logText = stats?.log.map((l) => `${stamp(l.occurredAt)} ${l.label}`).join('\n');
+const bars = stats ? commitBars(stats.dailyCommits) : [];
+const logText = stats?.log.map((l) => `${formatLogStamp(l.occurredAt)} ${l.label}`).join('\n');
 ---
 
 <aside class="readout">
 	<div class="block nerv-panel" id="activity">
 		<p class="block-head">
-			<span class="nerv-section-label">{m.activity_head_en()}</span>
-			<span class="head-jp">{m.activity_head_jp()}</span>
+			<span class="nerv-section-label">{HEADS.activity.en}</span>
+			<span class="head-jp">{HEADS.activity.jp}</span>
 		</p>
-		<p class="count-value">
-			<span data-count={stats?.recentCommits}>{stats?.recentCommits ?? '--'}</span>
-			<small>{m.activity_unit({ days: ACTIVITY_DAYS })}</small>
-		</p>
-		<div class="wave" aria-hidden="true">
-			{
-				bars.map((b, i) => (
-					<span
-						class={b.active ? 'on' : 'off'}
-						style={`height:${b.height}%; animation-delay:${i * 60}ms`}
-					/>
-				))
-			}
-		</div>
-		<p class="wave-caption">
-			{m.activity_caption({ days: ACTIVITY_DAYS })}
-			{stats ? '' : ` ${m.activity_caption_offline()}`}
-		</p>
+		{
+			stats ? (
+				<Fragment>
+					<p class="count-value">
+						{/* the count lands from the script, so the markup only holds its place */}
+						<span data-hud-commits={stats.recentCommits}>--</span>
+						<small>COMMITS · {ACTIVITY_DAYS}D</small>
+					</p>
+					<div class="wave" aria-hidden="true">
+						{bars.map((b, i) => (
+							<span
+								class={b.active ? 'on' : 'off'}
+								style={`height:${b.height}%; animation-delay:${i * 60}ms`}
+							/>
+						))}
+					</div>
+					<p class="wave-caption">COMMITS / DAY // LAST {ACTIVITY_DAYS}D</p>
+				</Fragment>
+			) : (
+				<p class="offline">{OFFLINE}</p>
+			)
+		}
 	</div>
 
 	<div class="block nerv-panel" id="languages">
 		<p class="block-head">
-			<span class="nerv-section-label">{m.languages_head_en()}</span>
-			<span class="head-jp">{m.languages_head_jp()}</span>
+			<span class="nerv-section-label">{HEADS.languages.en}</span>
+			<span class="head-jp">{HEADS.languages.jp}</span>
 		</p>
 		{
 			stats && stats.languages.length > 0 ? (
@@ -67,15 +71,15 @@ const logText = stats?.log.map((l) => `${stamp(l.occurredAt)} ${l.label}`).join(
 					</div>
 				))
 			) : (
-				<p class="offline">{m.data_link_offline()}</p>
+				<p class="offline">{OFFLINE}</p>
 			)
 		}
 	</div>
 
 	<div class="block nerv-panel" id="log">
 		<p class="block-head">
-			<span class="nerv-section-label">{m.log_head_en()}</span>
-			<span class="head-jp">{m.log_head_jp()}</span>
+			<span class="nerv-section-label">{HEADS.log.en}</span>
+			<span class="head-jp">{HEADS.log.jp}</span>
 		</p>
 		{
 			stats && logText ? (
@@ -86,15 +90,15 @@ const logText = stats?.log.map((l) => `${stamp(l.occurredAt)} ${l.label}`).join(
 					</div>
 				</div>
 			) : (
-				<p class="offline">{m.data_link_offline()}</p>
+				<p class="offline">{OFFLINE}</p>
 			)
 		}
 	</div>
 </aside>
 
 <script>
-	const el = document.querySelector<HTMLElement>('[data-count]');
-	const target = Number(el?.dataset.count);
+	const el = document.querySelector<HTMLElement>('#activity [data-hud-commits]');
+	const target = Number(el?.dataset.hudCommits);
 	if (el && Number.isFinite(target)) {
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 			el.textContent = String(target);

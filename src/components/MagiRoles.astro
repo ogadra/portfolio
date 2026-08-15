@@ -1,54 +1,62 @@
 ---
-import type { LanguageShare } from '../lib/github';
-import { m } from '../paraglide/messages.js';
+import type { GithubStats } from '../lib/github';
+import { languageShare } from '../lib/hudPanels';
+import { PROFILE } from '../lib/profile';
 
 interface Props {
-	languages: LanguageShare[];
+	stats: GithubStats | null;
 }
 
-const { languages } = Astro.props;
+const { stats } = Astro.props;
 
+// Instrument readout, not localisable copy: kept out of the message catalogue.
+const HEAD = { en: 'Skill Matrix', jp: '主要技術' };
+const ROWS = { register: 'Skill Register', lang: 'Primary Lang', share: 'GitHub Share' };
+const STATUS = { label: 'Status', value: '稼働中' };
+
+const [frontend, backend, infrastructure] = PROFILE.stack;
 const units = [
-	{ code: 'UNIT-01', name: m.unit_frontend(), tech: 'TypeScript', accent: 'cyan' },
-	{ code: 'UNIT-02', name: m.unit_backend(), tech: 'Go', accent: 'orange' },
-	{ code: 'UNIT-03', name: m.unit_infrastructure(), tech: 'HCL', accent: 'green' },
+	{ code: 'UNIT-01', name: 'FRONT-END', tech: frontend, accent: 'cyan' },
+	{ code: 'UNIT-02', name: 'BACK-END', tech: backend, accent: 'orange' },
+	{ code: 'UNIT-03', name: 'INFRASTRUCTURE', tech: infrastructure, accent: 'green' },
 ];
-
-const shareFor = (tech: string) => languages.find((l) => l.name === tech)?.ratio ?? null;
 ---
 
 <aside class="magi" id="skills">
 	<p class="magi-title">
-		<span class="nerv-section-label">{m.skills_head_en()}</span>
-		<span class="magi-jp">{m.skills_head_jp()}</span>
+		<span class="nerv-section-label">{HEAD.en}</span>
+		<span class="magi-jp">{HEAD.jp}</span>
 	</p>
 	{
 		units.map((u) => {
-			const share = shareFor(u.tech);
+			const share = stats ? languageShare(stats.languages, u.tech) : null;
+			// a language the account does not write and a fetch that never landed
+			// both leave the share empty, so the badge is what tells them apart
+			const badge = stats === null ? 'NO LINK' : share === null ? 'N/A' : 'OK';
 			return (
 				<div class={`unit ${u.accent}`}>
 					<div class="unit-head">
 						<div class="name-box">
-							<span class="reg">{m.skill_register()}</span>
+							<span class="reg">{ROWS.register}</span>
 							<p class="unit-name">{u.name}</p>
 						</div>
 						<span class="unit-badge">{u.code}</span>
 					</div>
 					<div class="rows">
 						<div class="row">
-							<span>{m.skill_primary_lang()}</span>
+							<span>{ROWS.lang}</span>
 							<b>{u.tech}</b>
 						</div>
 						<div class="row">
-							<span>{m.skill_github_share()}</span>
+							<span>{ROWS.share}</span>
 							<b class="num">
 								{share === null ? '--' : `${share}%`}
-								{share === null ? <i class="na">{m.value_na()}</i> : <i class="ok">{m.value_ok()}</i>}
+								<i class={share === null ? 'na' : 'ok'}>{badge}</i>
 							</b>
 						</div>
 						<div class="row">
-							<span>{m.skill_status()}</span>
-							<b class="verdict">{m.skill_status_value()}</b>
+							<span>{STATUS.label}</span>
+							<b class="verdict">{STATUS.value}</b>
 						</div>
 					</div>
 					{share !== null && (
