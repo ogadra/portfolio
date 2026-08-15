@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { STATS_MODE, type StatsMode } from './src/lib/statsFixture';
+import { STATS_MODE, type StatsMode } from './src/lib/statsMode';
 
 // GITHUB_STATS pins the home page data so a run never reaches api.github.com:
 // one server serves the populated HUD, the other the offline HUD.
