@@ -1,5 +1,10 @@
-import type { CommitHistory } from './commitHistory';
-import type { LanguageShare } from './githubStats';
+/** Commit counts keyed by the `YYYY-MM-DD` UTC day they belong to. */
+export type CommitHistory = Record<string, number>;
+
+export interface LanguageShare {
+	name: string;
+	ratio: number;
+}
 
 export interface Snapshot {
 	publicRepos: number;

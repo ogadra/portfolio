@@ -9,6 +9,6 @@ declare module 'cloudflare:workers' {
 		GITHUB_APP_PRIVATE_KEY: string;
 		GITHUB_APP_INSTALLATION_ID: string;
 		/** Pins the home page data for the Playwright run; unset means a live fetch. */
-		GITHUB_STATS?: import('./lib/statsFixture').StatsMode;
+		GITHUB_STATS?: import('./lib/github.fixture').StatsMode;
 	};
 }

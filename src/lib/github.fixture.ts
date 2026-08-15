@@ -1,3 +1,6 @@
+// Test-only data. Nothing here reaches a production render: the page falls back
+// to these values solely when the GITHUB_STATS var is set, which only the
+// Playwright servers do.
 import type { GithubStats } from './github';
 
 /**

@@ -1,12 +1,12 @@
 import { Temporal } from 'temporal-polyfill';
-import { commitSeries, utcDay, type CommitHistory } from './commitHistory';
 import { getInstallationToken, type GithubAppEnv } from './githubApp';
-import { eventLabel, languageRatio, type LanguageShare } from './githubStats';
 import {
 	cloudflareStore,
+	type CommitHistory,
 	type D1Database,
 	type GithubStore,
 	type KVNamespace,
+	type LanguageShare,
 	type Snapshot,
 } from './githubStore';
 
@@ -18,6 +18,7 @@ export const ACTIVITY_DAYS = 14;
 const LOG_LINES = 12;
 const RECENT_DAYS = 3;
 const RETENTION_DAYS = 400;
+const TOP_LANGUAGES = 8;
 
 export interface GithubStats {
 	publicRepos: number;
@@ -47,6 +48,63 @@ interface GithubEvent {
 	created_at: string;
 	repo: { name: string };
 }
+
+/**
+ * The UTC day an instant falls in. Commit counts are keyed by the day GitHub's
+ * commit search reports them under, which is UTC regardless of where the run
+ * happens, and `PlainDate` stringifies to exactly that `YYYY-MM-DD` key.
+ */
+const utcDay = (now: Temporal.Instant): Temporal.PlainDate =>
+	now.toZonedDateTimeISO('UTC').toPlainDate();
+
+export const commitSeries = (
+	history: CommitHistory,
+	now: Temporal.Instant,
+	days: number,
+): number[] => {
+	const today = utcDay(now);
+	return Array.from(
+		{ length: days },
+		(_, i) => history[today.subtract({ days: days - 1 - i }).toString()] ?? 0,
+	);
+};
+
+export const languageRatio = (languages: readonly (string | null)[], top = 3): LanguageShare[] => {
+	const counts = new Map<string, number>();
+	for (const lang of languages) {
+		if (!lang) continue;
+		counts.set(lang, (counts.get(lang) ?? 0) + 1);
+	}
+	const total = [...counts.values()].reduce((a, b) => a + b, 0);
+	if (total === 0) return [];
+	return [...counts.entries()]
+		.toSorted((a, b) => b[1] - a[1])
+		.slice(0, top)
+		.map(([name, count]) => ({ name, ratio: Math.round((count / total) * 100) }));
+};
+
+/** Every event type the public events API delivers, as documented by GitHub. */
+const EVENT_LABELS: Record<string, string> = {
+	CommitCommentEvent: 'COMMENT',
+	CreateEvent: 'CREATE',
+	DeleteEvent: 'DELETE',
+	ForkEvent: 'FORK',
+	GollumEvent: 'WIKI',
+	IssueCommentEvent: 'COMMENT',
+	IssuesEvent: 'ISSUE',
+	MemberEvent: 'MEMBER',
+	PublicEvent: 'PUBLIC',
+	PullRequestEvent: 'PULL_REQ',
+	PullRequestReviewCommentEvent: 'REVIEW',
+	PullRequestReviewEvent: 'REVIEW',
+	PullRequestReviewThreadEvent: 'REVIEW',
+	PushEvent: 'PUSH',
+	ReleaseEvent: 'RELEASE',
+	SponsorshipEvent: 'SPONSOR',
+	WatchEvent: 'STAR',
+};
+
+export const eventLabel = (type: string): string => EVENT_LABELS[type] ?? type;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === 'object' && value !== null;
@@ -141,7 +199,7 @@ const buildSnapshot = (user: GithubUser, repos: GithubRepo[], events: GithubEven
 	followers: user.followers,
 	languages: languageRatio(
 		repos.map((r) => r.language),
-		8,
+		TOP_LANGUAGES,
 	),
 	log: events.slice(0, LOG_LINES).map((e) => ({
 		label: `${eventLabel(e.type)} ${e.repo.name}`,
