@@ -2,6 +2,7 @@
 import { getLocale } from '../paraglide/runtime.js';
 import BootOverlay from '../components/BootOverlay.astro';
 import '../styles/global.css';
+import criticalCss from './BaseLayout.critical.css?raw';
 
 interface Props {
 	title?: string;
@@ -24,33 +25,7 @@ const { title = 'ogadra.com' } = Astro.props;
 			type="font/woff2"
 			crossorigin
 		/>
-		<style is:inline>
-			html,
-			body {
-				background: #000;
-			}
-			#boot {
-				display: flex;
-				position: fixed;
-				inset: 0;
-				z-index: 9998;
-				background: #000;
-				align-items: center;
-				justify-content: center;
-				animation: boot-out 0.35s ease-out 1s forwards;
-			}
-			@keyframes boot-out {
-				to {
-					opacity: 0;
-					visibility: hidden;
-				}
-			}
-			@media (prefers-reduced-motion: reduce) {
-				#boot {
-					display: none !important;
-				}
-			}
-		</style>
+		<style is:inline set:html={criticalCss}></style>
 	</head>
 	<body>
 		<BootOverlay />
@@ -61,10 +36,5 @@ const { title = 'ogadra.com' } = Astro.props;
 </html>
 
 <style>
-	.content-root {
-		position: fixed;
-		inset: 0;
-		z-index: 10;
-		overflow-y: auto;
-	}
+	@import './BaseLayout.css';
 </style>

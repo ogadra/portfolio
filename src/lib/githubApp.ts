@@ -1,7 +1,7 @@
 import { Temporal } from 'temporal-polyfill';
+import { FETCH_TIMEOUT_MS, GITHUB_API, githubHeaders, isRecord } from './githubApi';
 
 const JWT_LIFETIME_S = 540;
-const FETCH_TIMEOUT_MS = 2500;
 
 export interface GithubAppEnv {
 	GITHUB_APP_ID: string;
@@ -64,6 +64,13 @@ export const createAppJwt = async (
 	return `${signingInput}.${base64urlFromBytes(new Uint8Array(signature))}`;
 };
 
+const parseInstallationToken = (body: unknown): string => {
+	if (!isRecord(body) || typeof body.token !== 'string') {
+		throw new Error('GitHub App token exchange returned a body with no token');
+	}
+	return body.token;
+};
+
 /**
  * Mints a short-lived installation access token. Resolves to undefined when app
  * auth is not configured or fails, so callers can fall back to unauthenticated
@@ -79,20 +86,15 @@ export const getInstallationToken = async (
 	try {
 		const jwt = await createAppJwt(env.GITHUB_APP_ID, env.GITHUB_APP_PRIVATE_KEY, now);
 		const res = await fetch(
-			`https://api.github.com/app/installations/${env.GITHUB_APP_INSTALLATION_ID}/access_tokens`,
+			`${GITHUB_API}/app/installations/${env.GITHUB_APP_INSTALLATION_ID}/access_tokens`,
 			{
 				method: 'POST',
-				headers: {
-					accept: 'application/vnd.github+json',
-					authorization: `Bearer ${jwt}`,
-					'user-agent': 'ogadra.com',
-				},
+				headers: githubHeaders(jwt),
 				signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
 			},
 		);
 		if (!res.ok) throw new Error(`GitHub App token exchange responded with ${res.status}`);
-		const body = (await res.json()) as { token: string };
-		return body.token;
+		return parseInstallationToken(await res.json());
 	} catch (error) {
 		console.error('[github] app auth failed:', error);
 		return undefined;

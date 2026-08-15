@@ -1,0 +1,65 @@
+.hud-root {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	min-height: 100dvh;
+	padding: 1.4rem;
+	position: relative;
+}
+
+.corner {
+	position: absolute;
+	z-index: 1;
+	width: 26px;
+	height: 26px;
+	border: 0 solid var(--nerv-orange);
+	opacity: 0.7;
+	pointer-events: none;
+}
+.tl {
+	top: 8px;
+	left: 8px;
+	border-top-width: 2px;
+	border-left-width: 2px;
+}
+.tr {
+	top: 8px;
+	right: 8px;
+	border-top-width: 2px;
+	border-right-width: 2px;
+}
+.bl {
+	bottom: 8px;
+	left: 8px;
+	border-bottom-width: 2px;
+	border-left-width: 2px;
+}
+.br {
+	bottom: 8px;
+	right: 8px;
+	border-bottom-width: 2px;
+	border-right-width: 2px;
+}
+
+/* the background sits at z-index 0 inside .hud-root, so each panel needs its own
+   stacking position. Scoped styles stop at the component boundary, so the
+   command bar and the ticker set theirs in their own stylesheets. */
+.hud-main {
+	position: relative;
+	z-index: 1;
+	flex: 1;
+	display: grid;
+	grid-template-columns: 230px minmax(0, 1fr) 290px;
+	gap: 1rem;
+	align-items: center;
+}
+
+@media (max-width: 1000px) {
+	.hud-root {
+		padding: 1rem;
+	}
+	.hud-main {
+		grid-template-columns: 1fr;
+		gap: 1.25rem;
+	}
+}
