@@ -1,0 +1,195 @@
+#boot .boot-inner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.25rem;
+}
+
+/* The reticle is an imported SVG, so only its root carries a scope; the parts
+   inside it are reached from here. Each ring flickers or sweeps in on its own
+   delay, so the assembly reads as an instrument coming up. */
+#boot .reticle {
+	overflow: visible;
+	filter: drop-shadow(0 0 5px rgba(255, 153, 0, 0.4));
+}
+#boot .ring-outer {
+	opacity: 0;
+	transform-origin: 100px 100px;
+	animation:
+		boot-flicker-in 0.4s step-end 0.1s forwards,
+		boot-rotate 6s linear infinite;
+}
+#boot .ring-static {
+	opacity: 0;
+	animation: boot-flicker-in 0.3s step-end 0.2s forwards;
+}
+#boot .ring-inner {
+	stroke-dasharray: 390;
+	stroke-dashoffset: 390;
+	animation: boot-draw 0.5s steps(9, end) forwards;
+}
+#boot .ring-core {
+	opacity: 0;
+	transform-origin: 100px 100px;
+	animation:
+		boot-flicker-in 0.3s step-end 0.5s forwards,
+		boot-rotate-rev 9s linear infinite;
+}
+#boot .ticks {
+	opacity: 0;
+	animation: boot-flicker-in 0.4s step-end 0.25s forwards;
+}
+#boot .cardinals {
+	opacity: 0;
+	animation: boot-flicker-in 0.3s step-end 0.35s forwards;
+}
+#boot .crosshair {
+	opacity: 0;
+	animation: boot-flicker-in 0.3s step-end 0.45s forwards;
+}
+#boot .core-dot {
+	opacity: 0;
+	animation: boot-blink-in 0.3s step-end 0.6s forwards;
+}
+
+#boot .boot-readout {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	width: 220px;
+}
+#boot .boot-status {
+	font-family: 'Monaspace', 'Courier New', monospace;
+	font-size: 0.65rem;
+	letter-spacing: 0.3em;
+	color: #ff9900;
+	animation: boot-blink 0.8s step-end infinite;
+}
+#boot .boot-pct {
+	font-family: 'Monaspace', 'Courier New', monospace;
+	font-size: 0.65rem;
+	letter-spacing: 0.15em;
+	font-variant-numeric: tabular-nums;
+	color: #e3ddd4;
+}
+
+#boot .boot-progress {
+	width: 220px;
+	height: 2px;
+	background: rgba(255, 153, 0, 0.12);
+	overflow: hidden;
+	margin-top: -0.5rem;
+}
+#boot .boot-progress-fill {
+	display: block;
+	width: 100%;
+	height: 100%;
+	background: #ff9900;
+	transform: scaleX(0);
+	transform-origin: left;
+	animation: boot-progress 0.9s steps(12, end) 0.1s forwards;
+}
+
+#boot .boot-log {
+	list-style: none;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+#boot .boot-log li {
+	font-family: 'Monaspace', 'Courier New', monospace;
+	font-size: 0.58rem;
+	letter-spacing: 0.2em;
+	color: #e3ddd4;
+	opacity: 0;
+	animation: boot-flicker-in 0.25s step-end forwards;
+}
+
+#boot .boot-corner {
+	position: absolute;
+	width: 28px;
+	height: 28px;
+	border: 0 solid #ff9900;
+	opacity: 0;
+	animation: boot-flicker-in 0.3s step-end forwards;
+}
+#boot .tl {
+	top: 12px;
+	left: 12px;
+	border-top-width: 2px;
+	border-left-width: 2px;
+	animation-delay: 0.1s;
+}
+#boot .tr {
+	top: 12px;
+	right: 12px;
+	border-top-width: 2px;
+	border-right-width: 2px;
+	animation-delay: 0.2s;
+}
+#boot .br {
+	bottom: 12px;
+	right: 12px;
+	border-bottom-width: 2px;
+	border-right-width: 2px;
+	animation-delay: 0.3s;
+}
+#boot .bl {
+	bottom: 12px;
+	left: 12px;
+	border-bottom-width: 2px;
+	border-left-width: 2px;
+	animation-delay: 0.4s;
+}
+
+@keyframes boot-flicker-in {
+	0% {
+		opacity: 0;
+	}
+	35% {
+		opacity: 0.9;
+	}
+	50% {
+		opacity: 0.2;
+	}
+	65%,
+	100% {
+		opacity: 0.85;
+	}
+}
+@keyframes boot-blink-in {
+	to {
+		opacity: 1;
+	}
+}
+@keyframes boot-rotate {
+	to {
+		transform: rotate(1turn);
+	}
+}
+@keyframes boot-rotate-rev {
+	to {
+		transform: rotate(-1turn);
+	}
+}
+@keyframes boot-draw {
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+@keyframes boot-progress {
+	to {
+		transform: scaleX(1);
+	}
+}
+@keyframes boot-blink {
+	0%,
+	60% {
+		opacity: 1;
+	}
+	61%,
+	100% {
+		opacity: 0.25;
+	}
+}

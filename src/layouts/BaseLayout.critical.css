@@ -1,0 +1,28 @@
+/* Inlined into <head> rather than linked: the boot overlay has to cover the page
+   on the first paint, and a stylesheet request would let the content flash
+   through first. BaseLayout reads this file as text and writes it out verbatim. */
+html,
+body {
+	background: #000;
+}
+#boot {
+	display: flex;
+	position: fixed;
+	inset: 0;
+	z-index: 9998;
+	background: #000;
+	align-items: center;
+	justify-content: center;
+	animation: boot-out 0.35s ease-out 1s forwards;
+}
+@keyframes boot-out {
+	to {
+		opacity: 0;
+		visibility: hidden;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	#boot {
+		display: none !important;
+	}
+}
