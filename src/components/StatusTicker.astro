@@ -1,6 +1,5 @@
 ---
 import type { GithubStats } from '../lib/github';
-import { m } from '../paraglide/messages.js';
 
 interface Props {
 	stats: GithubStats | null;
@@ -8,13 +7,15 @@ interface Props {
 
 const { stats } = Astro.props;
 
+// The ticker reads as instrument text rather than prose, so it stays in the one
+// form the HUD is drawn around and never goes through the message catalogue.
 const message = [
-	m.ticker_github(),
-	m.ticker_twitter(),
-	m.ticker_public_repos({ count: stats?.publicRepos ?? '--' }),
-	m.ticker_stack(),
-	m.ticker_classification(),
-	m.ticker_site(),
+	'GITHUB github.com/ogadra',
+	'TWITTER @const_myself',
+	`PUBLIC REPOS ${stats?.publicRepos ?? '--'}`,
+	'STACK TypeScript / Go / HCL',
+	'CLASSIFICATION SOFTWARE ENGINEER',
+	'SITE ogadra.com / ASTRO ON CLOUDFLARE WORKERS',
 ].join('  ///  ');
 ---
 

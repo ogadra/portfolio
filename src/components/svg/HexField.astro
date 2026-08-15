@@ -1,0 +1,44 @@
+---
+// The hexagonal mesh the HUD sits on. A single tile is defined once and the
+// pattern repeats it across the whole layer, so the field costs one <rect>.
+---
+
+<svg class="hex-layer" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<pattern id="nerv-hex" patternUnits="userSpaceOnUse" width="90" height="51.96">
+			<g fill="none" stroke="var(--nerv-orange)" stroke-width="1">
+				<polygon points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98"></polygon>
+				<polygon
+					points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98"
+					transform="translate(90 0)"></polygon>
+				<polygon
+					points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98"
+					transform="translate(0 51.96)"></polygon>
+				<polygon
+					points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98"
+					transform="translate(90 51.96)"></polygon>
+				<polygon
+					points="30,0 15,25.98 -15,25.98 -30,0 -15,-25.98 15,-25.98"
+					transform="translate(45 25.98)"></polygon>
+			</g>
+		</pattern>
+	</defs>
+	<rect width="100%" height="100%" fill="url(#nerv-hex)"></rect>
+</svg>
+
+<style>
+	.hex-layer {
+		position: absolute;
+		inset: 0;
+		animation: hex-breathe 8s ease-in-out infinite;
+	}
+	@keyframes hex-breathe {
+		0%,
+		100% {
+			opacity: 0.06;
+		}
+		50% {
+			opacity: 0.12;
+		}
+	}
+</style>

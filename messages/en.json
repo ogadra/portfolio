@@ -1,19 +1,4 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"welcome_icon_alt": "ogadra's Icon Image.",
-	"brand_sub": "個人サイト",
-	"link_github": "GitHub",
-	"link_twitter": "Twitter",
-	"sys_status_label": "SYS",
-	"sys_status_value": "NOMINAL",
-	"ticker_github": "GITHUB github.com/ogadra",
-	"ticker_twitter": "TWITTER @const_myself",
-	"ticker_public_repos": "PUBLIC REPOS {count}",
-	"ticker_stack": "STACK TypeScript / Go / HCL",
-	"ticker_classification": "CLASSIFICATION SOFTWARE ENGINEER",
-	"ticker_site": "SITE ogadra.com / ASTRO ON CLOUDFLARE WORKERS",
-	"boot_status": "SYSTEM STARTUP",
-	"boot_log_github": "GITHUB LINK ........... OK",
-	"boot_log_history": "COMMIT HISTORY ........ OK",
-	"boot_log_render": "HUD RENDER ............ OK"
+	"brand_sub": "Personal site"
 }
