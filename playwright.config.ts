@@ -17,8 +17,10 @@ const chromium = {
 
 // both servers run at once, so each needs its own inspector port; wrangler
 // otherwise binds 9229 twice and the second process dies on startup
+// they also need separate local state: the KV and D1 stores are SQLite files
+// under one .wrangler/state, and two processes on them race
 const previewServer = (port: number, mode: StatsMode) => ({
-	command: `pnpm preview --ip 127.0.0.1 --port ${port} --inspector-port ${port + 1000} --var GITHUB_STATS:${mode}`,
+	command: `pnpm preview --ip 127.0.0.1 --port ${port} --inspector-port ${port + 1000} --persist-to .wrangler/state-${mode} --var GITHUB_STATS:${mode}`,
 	url: `http://127.0.0.1:${port}`,
 	reuseExistingServer: !process.env.CI,
 	timeout: 120_000,
