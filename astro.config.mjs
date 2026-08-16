@@ -9,6 +9,10 @@ export default defineConfig({
 	output: 'server',
 	adapter: cloudflare({ imageService: 'passthrough' }),
 	vite: {
+		// Prebundle the passthrough image service so a cold dev start does not re-optimize mid-flight.
+		optimizeDeps: {
+			include: ['astro/assets/services/noop'],
+		},
 		plugins: [
 			paraglideVitePlugin({
 				project: './project.inlang',

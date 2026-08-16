@@ -16,7 +16,7 @@
 	},
 	"dependencies": {
 		"@astrojs/check": "^0.9.10",
-		"@astrojs/cloudflare": "^14.1.7",
+		"@astrojs/cloudflare": "^14.2.1",
 		"@inlang/paraglide-js": "^2.23.1",
 		"astro": "^7.2.1",
 		"temporal-polyfill": "^1.0.3"
@@ -27,7 +27,7 @@
 		"typescript": "^6.0.3",
 		"vite-plus": "^0.2.9",
 		"vitest": "^4.1.10",
-		"wrangler": "^4.122.0"
+		"wrangler": "^4.123.0"
 	},
 	"engines": {
 		"node": ">=26.6.0"
