@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import {
-	readCommitHistory,
+	readContributionHistory,
 	readSnapshot,
-	writeCommitCounts,
+	writeContributionCounts,
 	writeSnapshot,
 	type D1Database,
 	type D1PreparedStatement,
@@ -134,27 +134,29 @@ describe('snapshot', () => {
 	});
 });
 
-describe('commit history', () => {
+describe('contribution history', () => {
 	it('reads only the days at or after the requested start', async () => {
 		const { db, queries, bindings } = fakeDb({
-			commit_history: [{ day: '2026-07-05', count: 3 }],
+			contribution_history: [{ day: '2026-07-05', count: 3 }],
 		});
-		expect(await readCommitHistory(db, '2026-06-22')).toEqual({ '2026-07-05': 3 });
-		expect(queries()[0]).toBe('SELECT day, count FROM commit_history WHERE day >= ?');
+		expect(await readContributionHistory(db, '2026-06-22')).toEqual({ '2026-07-05': 3 });
+		expect(queries()[0]).toBe('SELECT day, count FROM contribution_history WHERE day >= ?');
 		expect(bindings()[0]).toEqual(['2026-06-22']);
 	});
 
-	it('upserts every fresh day and prunes below the cutoff', async () => {
+	it('overwrites every reported day and prunes below the cutoff', async () => {
 		const { db, queries, bindings } = fakeDb();
-		await writeCommitCounts(db, { '2026-07-05': 3, '2026-07-04': 2 }, '2025-06-01');
-		expect(queries().filter((q) => q.startsWith('INSERT INTO commit_history'))).toHaveLength(2);
-		expect(queries().at(-1)).toBe('DELETE FROM commit_history WHERE day < ?');
+		await writeContributionCounts(db, { '2026-07-05': 3, '2026-07-04': 2 }, '2025-06-01');
+		expect(queries().filter((q) => q.startsWith('INSERT INTO contribution_history'))).toHaveLength(
+			2,
+		);
+		expect(queries().at(-1)).toBe('DELETE FROM contribution_history WHERE day < ?');
 		expect(bindings().at(-1)).toEqual(['2025-06-01']);
 	});
 
 	it('sends the upserts and the prune as one batch', async () => {
 		const { db, batched } = fakeDb();
-		await writeCommitCounts(db, { '2026-07-05': 3, '2026-07-04': 2 }, '2025-06-01');
+		await writeContributionCounts(db, { '2026-07-05': 3, '2026-07-04': 2 }, '2025-06-01');
 		expect(batched().map((s) => s.values)).toEqual([
 			['2026-07-05', 3],
 			['2026-07-04', 2],

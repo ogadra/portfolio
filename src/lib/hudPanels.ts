@@ -7,7 +7,7 @@ export interface CommitBar {
 }
 
 /** Scaled against the busiest day: a 4% stub for a silent one, a 14% floor for the rest. */
-export const commitBars = (daily: readonly number[]): CommitBar[] => {
+export const contributionBars = (daily: readonly number[]): CommitBar[] => {
 	const busiest = Math.max(1, ...daily);
 	return daily.map((count) => ({
 		height: count === 0 ? 4 : Math.max(14, Math.round((count / busiest) * 100)),

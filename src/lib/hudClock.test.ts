@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vite-plus/test';
 import { formatHudDate, formatHudTime, formatLogStamp } from './hudClock';
 
 describe('hudClock', () => {
-	it('formats dates as YYYY.MM.DD', () => {
-		expect(formatHudDate(new Date(2026, 6, 5))).toBe('2026.07.05');
+	it('formats dates as YYYY/MM/DD', () => {
+		expect(formatHudDate(new Date(2026, 6, 5))).toBe('2026/07/05');
 	});
 
 	it('formats times as HH:MM:SS with zero padding', () => {

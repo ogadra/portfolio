@@ -31,10 +31,11 @@
 	white-space: nowrap;
 }
 
+/* the unit sits under the count, which is wide enough at three digits to crowd it off the line */
 .count-value {
 	display: flex;
-	align-items: baseline;
-	gap: 0.5em;
+	flex-direction: column;
+	gap: 0.35em;
 	font-family: var(--font-mono);
 	font-variant-numeric: tabular-nums;
 	font-size: 2.3rem;
@@ -47,6 +48,7 @@
 	letter-spacing: 0.25em;
 	color: var(--nerv-white);
 	opacity: 0.6;
+	text-shadow: none;
 }
 
 .wave {

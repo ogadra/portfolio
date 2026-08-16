@@ -2,26 +2,24 @@ import { Temporal } from 'temporal-polyfill';
 import { FETCH_TIMEOUT_MS, GITHUB_API, githubHeaders, isRecord } from './githubApi';
 import { getInstallationToken, type GithubAppEnv } from './githubApp';
 import {
-	readCommitHistory,
+	readContributionHistory,
 	readSnapshot,
-	writeCommitCounts,
+	writeContributionCounts,
 	writeSnapshot,
-	type CommitHistory,
+	type ContributionHistory,
 	type D1Database,
 	type KVNamespace,
 	type LanguageShare,
 	type Snapshot,
 } from './githubStore';
 
-// languageRatio returns it and GithubStats carries it, so a caller has to be
-// able to name it without reaching into the store.
+// languageRatio returns it and GithubStats carries it, so a caller can name it without the store.
 export type { LanguageShare };
 
 const USER = 'ogadra';
-/** Days of commit history the sparkline shows. */
+/** Days of contribution history the sparkline shows. */
 export const ACTIVITY_DAYS = 14;
 const LOG_LINES = 12;
-const RECENT_DAYS = 3;
 const RETENTION_DAYS = 400;
 const TOP_LANGUAGES = 8;
 
@@ -29,8 +27,8 @@ export interface GithubStats {
 	publicRepos: number;
 	followers: number;
 	languages: LanguageShare[];
-	recentCommits: number;
-	dailyCommits: number[];
+	recentContributions: number;
+	dailyContributions: number[];
 	log: { label: string; occurredAt: string }[];
 }
 
@@ -54,16 +52,12 @@ interface GithubEvent {
 	repo: { name: string };
 }
 
-/**
- * The UTC day an instant falls in. Commit counts are keyed by the day GitHub's
- * commit search reports them under, which is UTC regardless of where the run
- * happens, and `PlainDate` stringifies to exactly that `YYYY-MM-DD` key.
- */
+/** The UTC day an instant falls in, which is how the calendar keys its days and how PlainDate prints. */
 const utcDay = (now: Temporal.Instant): Temporal.PlainDate =>
 	now.toZonedDateTimeISO('UTC').toPlainDate();
 
-export const commitSeries = (
-	history: CommitHistory,
+export const contributionSeries = (
+	history: ContributionHistory,
 	now: Temporal.Instant,
 	days: number,
 ): number[] => {
@@ -151,15 +145,33 @@ const parseEvents = (body: unknown): GithubEvent[] => {
 	return body.map(parseEvent);
 };
 
-const parseCommitCount = (body: unknown): number => {
-	if (!isRecord(body)) return unexpected('commit count');
-	const { total_count: totalCount } = body;
-	if (typeof totalCount !== 'number') return unexpected('commit count');
-	return totalCount;
-};
+/** Walks a nested response, answering undefined the moment the shape stops matching. */
+const nested = (body: unknown, path: readonly string[]): unknown =>
+	path.reduce<unknown>((node, key) => (isRecord(node) ? node[key] : undefined), body);
 
-const dayCountPath = (day: string): string =>
-	`/search/commits?q=${encodeURIComponent(`author:${USER} author-date:${day}`)}&per_page=1`;
+const parseContributionCalendar = (body: unknown): ContributionHistory => {
+	const weeks = nested(body, [
+		'data',
+		'user',
+		'contributionsCollection',
+		'contributionCalendar',
+		'weeks',
+	]);
+	if (!Array.isArray(weeks)) return unexpected('contribution calendar');
+	const history: ContributionHistory = {};
+	for (const week of weeks) {
+		const days = nested(week, ['contributionDays']);
+		if (!Array.isArray(days)) return unexpected('contribution week');
+		for (const day of days) {
+			if (!isRecord(day)) return unexpected('contribution day');
+			const { date, contributionCount: count } = day;
+			if (typeof date !== 'string') return unexpected('contribution day');
+			if (typeof count !== 'number') return unexpected('contribution day');
+			history[date] = count;
+		}
+	}
+	return history;
+};
 
 const request = async (path: string, token: string | undefined): Promise<unknown> => {
 	const res = await fetch(`${GITHUB_API}${path}`, {
@@ -170,16 +182,28 @@ const request = async (path: string, token: string | undefined): Promise<unknown
 	return res.json();
 };
 
-const fetchRecentCommitCounts = async (
+// The calendar is GraphQL-only; REST has no endpoint for it, and GraphQL refuses an anonymous call.
+const CALENDAR_QUERY = `query($login: String!) {
+	user(login: $login) {
+		contributionsCollection {
+			contributionCalendar {
+				weeks { contributionDays { date contributionCount } }
+			}
+		}
+	}
+}`;
+
+const fetchContributionHistory = async (
 	token: string | undefined,
-	now: Temporal.Instant,
-): Promise<CommitHistory> => {
-	const today = utcDay(now);
-	const days = Array.from({ length: RECENT_DAYS }, (_, i) =>
-		today.subtract({ days: i }).toString(),
-	);
-	const bodies = await Promise.all(days.map((day) => request(dayCountPath(day), token)));
-	return Object.fromEntries(days.map((day, i) => [day, parseCommitCount(bodies[i])]));
+): Promise<ContributionHistory> => {
+	const res = await fetch(`${GITHUB_API}/graphql`, {
+		method: 'POST',
+		headers: { ...githubHeaders(token), 'content-type': 'application/json' },
+		body: JSON.stringify({ query: CALENDAR_QUERY, variables: { login: USER } }),
+		signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+	});
+	if (!res.ok) throw new Error(`GitHub GraphQL responded with ${res.status}`);
+	return parseContributionCalendar(await res.json());
 };
 
 /** Oldest day the sparkline can show, so the store never reads past it. */
@@ -204,42 +228,27 @@ const buildSnapshot = (user: GithubUser, repos: GithubRepo[], events: GithubEven
 	})),
 });
 
-const toStats = (snapshot: Snapshot, dailyCommits: number[]): GithubStats => ({
+const toStats = (snapshot: Snapshot, dailyContributions: number[]): GithubStats => ({
 	publicRepos: snapshot.publicRepos,
 	followers: snapshot.followers,
 	languages: snapshot.languages,
-	recentCommits: dailyCommits.reduce((sum, n) => sum + n, 0),
-	dailyCommits,
+	recentContributions: dailyContributions.reduce((sum, n) => sum + n, 0),
+	dailyContributions,
 	log: snapshot.log,
 });
 
-/**
- * Merges the days the commit search just reported into the stored ones. Taking
- * the larger count matches what the upsert does in SQL: a day the search no
- * longer reaches comes back as 0, and that must not erase what is on record.
- */
-const mergeCounts = (stored: CommitHistory, fresh: CommitHistory): CommitHistory => ({
-	...stored,
-	...Object.fromEntries(
-		Object.entries(fresh).map(([day, count]) => [day, Math.max(stored[day] ?? 0, count)]),
-	),
-});
-
-/**
- * Hands a promise to the runtime so it survives past the response. Cloudflare
- * cancels anything still pending otherwise.
- */
+/** Hands a promise to the runtime, which otherwise cancels anything still pending. */
 export type WaitUntil = (promise: Promise<unknown>) => void;
 
 /** Records the refresh. Failing to store it costs the next call, not this one. */
 const persist = async (
 	env: GithubEnv,
 	snapshot: Snapshot,
-	freshCounts: CommitHistory,
+	history: ContributionHistory,
 	cutoffDay: string,
 ): Promise<void> => {
 	const writes = await Promise.allSettled([
-		writeCommitCounts(env.DB, freshCounts, cutoffDay),
+		writeContributionCounts(env.DB, history, cutoffDay),
 		writeSnapshot(env.DB, env.GITHUB_CACHE, snapshot),
 	]);
 	for (const write of writes) {
@@ -253,16 +262,14 @@ const readFallbackStats = async (
 ): Promise<GithubStats | null> => {
 	const snapshot = await readSnapshot(env.DB, env.GITHUB_CACHE);
 	if (!snapshot) return null;
-	const stored = await readCommitHistory(env.DB, activityWindowStart(now));
-	return toStats(snapshot, commitSeries(stored, now, ACTIVITY_DAYS));
+	const stored = await readContributionHistory(env.DB, activityWindowStart(now));
+	return toStats(snapshot, contributionSeries(stored, now, ACTIVITY_DAYS));
 };
 
 /**
- * Fetches live GitHub stats on every call, authenticated as the GitHub App
- * installation when configured. The answer comes from what the API returned
- * plus the history already on record, so the response never waits on a write;
- * the refresh is stored in the background. The snapshot is read back only when
- * the live fetch fails (rate limits, timeouts).
+ * Fetches live GitHub stats on every call, authenticated as the GitHub App installation. The
+ * calendar carries a full year, so the answer needs nothing from D1 and never waits on the write
+ * that records it. The store is read back only when the live fetch fails (rate limits, timeouts).
  */
 export const fetchGithubStats = async (
 	env: GithubEnv,
@@ -271,17 +278,15 @@ export const fetchGithubStats = async (
 ): Promise<GithubStats | null> => {
 	try {
 		const token = await getInstallationToken(env, now);
-		const [user, repos, events, freshCounts, storedHistory] = await Promise.all([
+		const [user, repos, events, history] = await Promise.all([
 			request(`/users/${USER}`, token).then(parseUser),
 			request(`/users/${USER}/repos?per_page=100&sort=pushed`, token).then(parseRepos),
 			request(`/users/${USER}/events/public?per_page=100`, token).then(parseEvents),
-			fetchRecentCommitCounts(token, now),
-			readCommitHistory(env.DB, activityWindowStart(now)),
+			fetchContributionHistory(token),
 		]);
 		const snapshot = buildSnapshot(user, repos, events);
-		waitUntil(persist(env, snapshot, freshCounts, retentionCutoff(now)));
-		const history = mergeCounts(storedHistory, freshCounts);
-		return toStats(snapshot, commitSeries(history, now, ACTIVITY_DAYS));
+		waitUntil(persist(env, snapshot, history, retentionCutoff(now)));
+		return toStats(snapshot, contributionSeries(history, now, ACTIVITY_DAYS));
 	} catch (error) {
 		console.error('[github] fetch failed:', error);
 		try {

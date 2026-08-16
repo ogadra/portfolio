@@ -1,7 +1,7 @@
 ---
 import { ACTIVITY_DAYS, type GithubStats } from '../lib/github';
 import { formatLogStamp } from '../lib/hudClock';
-import { commitBars } from '../lib/hudPanels';
+import { contributionBars } from '../lib/hudPanels';
 
 interface Props {
 	stats: GithubStats | null;
@@ -17,7 +17,7 @@ const HEADS = {
 };
 const OFFLINE = 'DATA LINK OFFLINE';
 
-const bars = stats ? commitBars(stats.dailyCommits) : [];
+const bars = stats ? contributionBars(stats.dailyContributions) : [];
 const logText = stats?.log.map((l) => `${formatLogStamp(l.occurredAt)} ${l.label}`).join('\n');
 ---
 
@@ -32,8 +32,8 @@ const logText = stats?.log.map((l) => `${formatLogStamp(l.occurredAt)} ${l.label
 				<Fragment>
 					<p class="count-value">
 						{/* the count lands from the script, so the markup only holds its place */}
-						<span data-hud-commits={stats.recentCommits}>--</span>
-						<small>COMMITS · {ACTIVITY_DAYS}D</small>
+						<span data-hud-contributions={stats.recentContributions}>--</span>
+						<small>CONTRIBUTIONS · {ACTIVITY_DAYS}D</small>
 					</p>
 					<div class="wave" aria-hidden="true">
 						{bars.map((b, i) => (
@@ -43,7 +43,7 @@ const logText = stats?.log.map((l) => `${formatLogStamp(l.occurredAt)} ${l.label
 							/>
 						))}
 					</div>
-					<p class="wave-caption">COMMITS / DAY // LAST {ACTIVITY_DAYS}D</p>
+					<p class="wave-caption">CONTRIBUTIONS / DAY // LAST {ACTIVITY_DAYS}D</p>
 				</Fragment>
 			) : (
 				<p class="offline">{OFFLINE}</p>
@@ -97,8 +97,8 @@ const logText = stats?.log.map((l) => `${formatLogStamp(l.occurredAt)} ${l.label
 </aside>
 
 <script>
-	const el = document.querySelector<HTMLElement>('#activity [data-hud-commits]');
-	const target = Number(el?.dataset.hudCommits);
+	const el = document.querySelector<HTMLElement>('#activity [data-hud-contributions]');
+	const target = Number(el?.dataset.hudContributions);
 	if (el && Number.isFinite(target)) {
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 			el.textContent = String(target);

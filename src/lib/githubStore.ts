@@ -1,11 +1,7 @@
-// Reads and writes the persisted GitHub data. The snapshot is split across both
-// stores: the single-row user stats live in KV, the language and event lists
-// stay in D1 alongside the commit history. A snapshot write therefore spans two
-// stores and is not atomic; a torn write only mixes counters from adjacent
-// refreshes, which the fallback path tolerates.
+// A snapshot write spans KV and D1, so it is not atomic; a torn one only mixes adjacent refreshes.
 
-/** Commit counts keyed by the `YYYY-MM-DD` UTC day they belong to. */
-export type CommitHistory = Record<string, number>;
+/** Contribution counts keyed by the `YYYY-MM-DD` UTC day they belong to. */
+export type ContributionHistory = Record<string, number>;
 
 export interface LanguageShare {
 	name: string;
@@ -41,29 +37,30 @@ interface UserStats {
 
 const USER_STATS_KEY = 'github:user_stats';
 
-const UPSERT_COMMIT = `INSERT INTO commit_history (day, count) VALUES (?, ?)
-ON CONFLICT(day) DO UPDATE SET count = MAX(count, excluded.count)`;
+// The calendar reports every day of the year on each read, so it overwrites rather than accumulates.
+const UPSERT_CONTRIBUTION = `INSERT INTO contribution_history (day, count) VALUES (?, ?)
+ON CONFLICT(day) DO UPDATE SET count = excluded.count`;
 
-export const readCommitHistory = async (
+export const readContributionHistory = async (
 	db: D1Database,
 	sinceDay: string,
-): Promise<CommitHistory> => {
+): Promise<ContributionHistory> => {
 	const { results } = await db
-		.prepare('SELECT day, count FROM commit_history WHERE day >= ?')
+		.prepare('SELECT day, count FROM contribution_history WHERE day >= ?')
 		.bind(sinceDay)
 		.all<{ day: string; count: number }>();
 	return Object.fromEntries(results.map((r) => [r.day, r.count]));
 };
 
-export const writeCommitCounts = async (
+export const writeContributionCounts = async (
 	db: D1Database,
-	counts: CommitHistory,
+	counts: ContributionHistory,
 	cutoffDay: string,
 ): Promise<void> => {
 	const upserts = Object.entries(counts).map(([day, count]) =>
-		db.prepare(UPSERT_COMMIT).bind(day, count),
+		db.prepare(UPSERT_CONTRIBUTION).bind(day, count),
 	);
-	const prune = db.prepare('DELETE FROM commit_history WHERE day < ?').bind(cutoffDay);
+	const prune = db.prepare('DELETE FROM contribution_history WHERE day < ?').bind(cutoffDay);
 	await db.batch([...upserts, prune]);
 };
 

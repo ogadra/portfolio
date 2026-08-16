@@ -13,8 +13,8 @@ export const FIXTURE_STATS: GithubStats = {
 		{ name: 'Go', ratio: 30 },
 		{ name: 'HCL', ratio: 15 },
 	],
-	recentCommits: 21,
-	dailyCommits: [0, 1, 3, 0, 2, 4, 1, 0, 2, 3, 1, 0, 2, 2],
+	recentContributions: 21,
+	dailyContributions: [0, 1, 3, 0, 2, 4, 1, 0, 2, 3, 1, 0, 2, 2],
 	log: [
 		{ label: 'PUSH ogadra/portfolio', occurredAt: '2026-07-05T23:12:07Z' },
 		{ label: 'PULL_REQ ogadra/portfolio', occurredAt: '2026-07-04T08:41:52Z' },
