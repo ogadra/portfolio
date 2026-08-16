@@ -1,24 +1,24 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { commitBars, languageShare } from './hudPanels';
+import { contributionBars, languageShare } from './hudPanels';
 
-describe('commitBars', () => {
+describe('contributionBars', () => {
 	it('scales every bar against the busiest day', () => {
-		expect(commitBars([4, 2, 1]).map((b) => b.height)).toEqual([100, 50, 25]);
+		expect(contributionBars([4, 2, 1]).map((b) => b.height)).toEqual([100, 50, 25]);
 	});
 
 	it('lifts a non-zero day to 14% so a single commit stays visible', () => {
-		expect(commitBars([100, 1]).map((b) => b.height)).toEqual([100, 14]);
+		expect(contributionBars([100, 1]).map((b) => b.height)).toEqual([100, 14]);
 	});
 
 	it('leaves a silent day as a 4% stub and marks it inactive', () => {
-		expect(commitBars([4, 0])).toEqual([
+		expect(contributionBars([4, 0])).toEqual([
 			{ height: 100, active: true },
 			{ height: 4, active: false },
 		]);
 	});
 
 	it('keeps the bars flat when nothing was committed', () => {
-		expect(commitBars([0, 0]).map((b) => b.height)).toEqual([4, 4]);
+		expect(contributionBars([0, 0]).map((b) => b.height)).toEqual([4, 4]);
 	});
 });
 

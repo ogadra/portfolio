@@ -27,7 +27,7 @@ test('renders the GitHub panels from the pinned fixture', async ({ page }) => {
 	await expect(page.locator('#subject .stat.cyan .stat-value')).toHaveText('7');
 	await expect(page.locator('#subject .stat.green .stat-value')).toHaveText('NOMINAL');
 	// the counter animates up to the fixture total, so wait for it to land
-	await expect(page.locator('#activity [data-hud-commits]')).toHaveText('21');
+	await expect(page.locator('#activity [data-hud-contributions]')).toHaveText('21');
 	// the fixture has four silent days among its fourteen
 	await expect(page.locator('#activity .wave span.off')).toHaveCount(4);
 });

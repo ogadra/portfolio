@@ -1,7 +1,7 @@
 import { Temporal } from 'temporal-polyfill';
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
-	commitSeries,
+	contributionSeries,
 	eventLabel,
 	fetchGithubStats,
 	languageRatio,
@@ -15,8 +15,8 @@ import type { D1Database, KVNamespace, Snapshot } from './githubStore';
  * it. What the SQL then does with those arguments is githubStore's own test.
  */
 const store = vi.hoisted(() => ({
-	readCommitHistory: vi.fn(),
-	writeCommitCounts: vi.fn(),
+	readContributionHistory: vi.fn(),
+	writeContributionCounts: vi.fn(),
 	readSnapshot: vi.fn(),
 	writeSnapshot: vi.fn(),
 }));
@@ -54,13 +54,25 @@ const DAY_COUNTS: Record<string, number> = {
 	'2026-07-03': 0,
 };
 
+/** The calendar as GraphQL nests it: days grouped into the weeks of the graph. */
+const calendarWith = (weeks: unknown[]) => ({
+	data: { user: { contributionsCollection: { contributionCalendar: { weeks } } } },
+});
+
+const calendarBody = (counts: Record<string, number>) =>
+	calendarWith([
+		{
+			contributionDays: Object.entries(counts).map(([date, contributionCount]) => ({
+				date,
+				contributionCount,
+			})),
+		},
+	]);
+
 const ok = (body: unknown) => ({ ok: true, json: () => Promise.resolve(body) });
 
 const apiFetch = vi.fn((url: string, _init?: RequestInit) => {
-	if (url.includes('/search/commits')) {
-		const day = decodeURIComponent(url).match(/author-date:(\d{4}-\d{2}-\d{2})/)?.[1] ?? '';
-		return Promise.resolve(ok({ total_count: DAY_COUNTS[day] ?? 0 }));
-	}
+	if (url.endsWith('/graphql')) return Promise.resolve(ok(calendarBody(DAY_COUNTS)));
 	if (url.includes('/repos')) return Promise.resolve(ok([{ language: 'TypeScript' }]));
 	if (url.includes('/events/public')) {
 		return Promise.resolve(
@@ -80,8 +92,8 @@ const never = () => new Promise<never>(() => {});
 
 beforeEach(() => {
 	vi.spyOn(console, 'error').mockImplementation(() => {});
-	store.readCommitHistory.mockResolvedValue({});
-	store.writeCommitCounts.mockResolvedValue(undefined);
+	store.readContributionHistory.mockResolvedValue({});
+	store.writeContributionCounts.mockResolvedValue(undefined);
 	store.readSnapshot.mockResolvedValue(null);
 	store.writeSnapshot.mockResolvedValue(undefined);
 });
@@ -93,22 +105,21 @@ afterEach(() => {
 });
 
 describe('fetchGithubStats', () => {
-	it('returns live stats built from the API and the stored history', async () => {
+	it('returns live stats built from the API alone', async () => {
 		vi.stubGlobal('fetch', apiFetch);
-		store.readCommitHistory.mockResolvedValue({ '2026-07-05': 3, '2026-07-04': 2 });
 
 		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 
 		assert(stats, 'the API answered, so the live path should have produced stats');
-		expect(stats).toMatchObject({ publicRepos: 42, followers: 7, recentCommits: 5 });
-		expect(stats.dailyCommits.at(-1)).toBe(3);
-		expect(stats.dailyCommits.at(-2)).toBe(2);
+		expect(stats).toMatchObject({ publicRepos: 42, followers: 7, recentContributions: 5 });
+		expect(stats.dailyContributions.at(-1)).toBe(3);
+		expect(stats.dailyContributions.at(-2)).toBe(2);
 		expect(stats.log[0]).toEqual({ label: 'PUSH ogadra/x', occurredAt: '2026-07-05T00:00:00Z' });
 	});
 
 	it('returns before either write settles', async () => {
 		vi.stubGlobal('fetch', apiFetch);
-		store.writeCommitCounts.mockReturnValue(never());
+		store.writeContributionCounts.mockReturnValue(never());
 		store.writeSnapshot.mockReturnValue(never());
 
 		expect(await fetchGithubStats(unconfiguredEnv, waitUntil, NOW)).toMatchObject({
@@ -122,9 +133,8 @@ describe('fetchGithubStats', () => {
 		await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 		await settleBackgroundWork();
 
-		// the search reaches back RECENT_DAYS, so a day is stored before it rolls
-		// out of the window and can only be read back from D1
-		expect(store.writeCommitCounts).toHaveBeenCalledWith(DB, DAY_COUNTS, '2025-05-31');
+		// the whole calendar is recorded, so the fallback can answer past the sparkline window
+		expect(store.writeContributionCounts).toHaveBeenCalledWith(DB, DAY_COUNTS, '2025-05-31');
 		expect(store.writeSnapshot).toHaveBeenCalledWith(
 			DB,
 			GITHUB_CACHE,
@@ -132,37 +142,31 @@ describe('fetchGithubStats', () => {
 		);
 	});
 
-	it('reads the sparkline window once, before the write', async () => {
+	it('never reads the store on the live path', async () => {
 		vi.stubGlobal('fetch', apiFetch);
 
 		await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 		await settleBackgroundWork();
 
-		expect(store.readCommitHistory).toHaveBeenCalledTimes(1);
-		expect(store.readCommitHistory).toHaveBeenCalledWith(DB, '2026-06-22');
+		expect(store.readContributionHistory).not.toHaveBeenCalled();
 	});
 
-	it('keeps the stored count when the search no longer reaches that day', async () => {
-		vi.stubGlobal('fetch', apiFetch);
-		// the API reports 0 for 07-03, the store still holds the 5 it recorded then
-		store.readCommitHistory.mockResolvedValue({ '2026-07-03': 5 });
+	it('pads the series to the full window when the calendar misses a day', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn((url: string, init?: RequestInit) =>
+				url.endsWith('/graphql')
+					? Promise.resolve(ok(calendarBody({ '2026-07-02': 7 })))
+					: apiFetch(url, init),
+			),
+		);
 
 		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
 
 		assert(stats, 'the API answered, so the live path should have produced stats');
-		expect(stats.dailyCommits.at(-3)).toBe(5);
-	});
-
-	it('pads the series to the full window when the store holds fewer days', async () => {
-		vi.stubGlobal('fetch', apiFetch);
-		store.readCommitHistory.mockResolvedValue({ '2026-07-02': 7 });
-
-		const stats = await fetchGithubStats(unconfiguredEnv, waitUntil, NOW);
-
-		assert(stats, 'the API answered, so the live path should have produced stats');
-		expect(stats.dailyCommits).toHaveLength(14);
-		expect(stats.dailyCommits.at(-4)).toBe(7);
-		expect(stats.recentCommits).toBe(12);
+		expect(stats.dailyContributions).toHaveLength(14);
+		expect(stats.dailyContributions.at(-4)).toBe(7);
+		expect(stats.recentContributions).toBe(7);
 	});
 
 	it('still returns the live stats when a background write fails', async () => {
@@ -173,7 +177,7 @@ describe('fetchGithubStats', () => {
 		await settleBackgroundWork();
 
 		expect(stats).toMatchObject({ publicRepos: 42 });
-		expect(store.writeCommitCounts).toHaveBeenCalled();
+		expect(store.writeContributionCounts).toHaveBeenCalled();
 	});
 
 	// each parser guards a different endpoint, so a shape check that regressed in
@@ -185,7 +189,13 @@ describe('fetchGithubStats', () => {
 		['event list', '/events/public', { not: 'an array' }],
 		['event', '/events/public', [{ type: 'PushEvent', created_at: 1, repo: { name: 'x' } }]],
 		['event repo', '/events/public', [{ type: 'PushEvent', created_at: '2026-07-05', repo: {} }]],
-		['commit count', '/search/commits', { total_count: 'lots' }],
+		['contribution calendar', '/graphql', { errors: [{ message: 'Bad credentials' }] }],
+		['contribution week', '/graphql', calendarWith([{}])],
+		[
+			'contribution day',
+			'/graphql',
+			calendarWith([{ contributionDays: [{ date: '2026-07-05' }] }]),
+		],
 	])('falls back when the %s comes back in an unexpected shape', async (_shape, path, body) => {
 		vi.stubGlobal(
 			'fetch',
@@ -268,27 +278,27 @@ describe('fetchGithubStats app auth', () => {
 	});
 });
 
-describe('commitSeries', () => {
+describe('contributionSeries', () => {
 	it('builds an oldest-to-newest series with zeros for missing days', () => {
 		const history = { '2026-07-07': 4, '2026-07-05': 6 };
-		expect(commitSeries(history, at('2026-07-07T12:00:00Z'), 4)).toEqual([0, 6, 0, 4]);
+		expect(contributionSeries(history, at('2026-07-07T12:00:00Z'), 4)).toEqual([0, 6, 0, 4]);
 	});
 
 	it('leaves out days older than the window', () => {
 		const history = { '2026-07-07': 4, '2026-07-01': 9 };
-		expect(commitSeries(history, at('2026-07-07T12:00:00Z'), 3)).toEqual([0, 0, 4]);
+		expect(contributionSeries(history, at('2026-07-07T12:00:00Z'), 3)).toEqual([0, 0, 4]);
 	});
 
 	it('ends on the UTC day, not the local one', () => {
 		const history = { '2026-07-07': 4, '2026-07-08': 8 };
 		// both instants fall on 07-07 in UTC, so both series end on its count
-		expect(commitSeries(history, at('2026-07-07T00:00:00Z'), 2)).toEqual([0, 4]);
-		expect(commitSeries(history, at('2026-07-07T23:59:59Z'), 2)).toEqual([0, 4]);
-		expect(commitSeries(history, at('2026-07-08T00:00:00Z'), 2)).toEqual([4, 8]);
+		expect(contributionSeries(history, at('2026-07-07T00:00:00Z'), 2)).toEqual([0, 4]);
+		expect(contributionSeries(history, at('2026-07-07T23:59:59Z'), 2)).toEqual([0, 4]);
+		expect(contributionSeries(history, at('2026-07-08T00:00:00Z'), 2)).toEqual([4, 8]);
 	});
 
 	it('returns just today for a one-day window', () => {
-		expect(commitSeries({ '2026-07-07': 4 }, at('2026-07-07T12:00:00Z'), 1)).toEqual([4]);
+		expect(contributionSeries({ '2026-07-07': 4 }, at('2026-07-07T12:00:00Z'), 1)).toEqual([4]);
 	});
 });
 
