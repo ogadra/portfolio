@@ -50,6 +50,6 @@ test('lifts the ticker above the background layer', async ({ page }) => {
 test('replaces the clock placeholders with the current time', async ({ page }) => {
 	await page.goto('/');
 
-	await expect(page.locator('[data-hud-date]')).toHaveText(/^\d{4}\.\d{2}\.\d{2}$/);
+	await expect(page.locator('[data-hud-date]')).toHaveText(/^\d{4}\/\d{2}\/\d{2}$/);
 	await expect(page.locator('[data-hud-time]')).toHaveText(/^\d{2}:\d{2}:\d{2}$/);
 });
