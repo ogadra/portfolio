@@ -1,0 +1,44 @@
+---
+import { m } from '../paraglide/messages.js';
+import BrandMark from '../assets/brandMark.svg';
+import { PROFILE } from '../lib/profile';
+---
+
+<header class="command-bar">
+	<div class="primary">
+		<div class="brand">
+			<BrandMark class="brand-mark" aria-hidden="true" />
+			<div class="brand-text">
+				<span class="brand-sub">{m.brand_sub()}</span>
+				<a class="brand-name" href="/">{PROFILE.siteName}</a>
+			</div>
+		</div>
+		<div class="meta">
+			<a class="chip" href={PROFILE.github.url} rel="me">GitHub</a>
+			<a class="chip" href={PROFILE.twitter.url} rel="me">Twitter</a>
+			<span class="clock" aria-hidden="true">
+				<span data-hud-date>----/--/--</span>
+				<time data-hud-time>--:--:--</time>
+			</span>
+			<span class="sys-status" aria-hidden="true">SYS<b>NOMINAL</b></span>
+		</div>
+	</div>
+</header>
+
+<script>
+	import { formatHudDate, formatHudTime } from '../lib/hudClock';
+
+	const dateEl = document.querySelector('[data-hud-date]');
+	const timeEl = document.querySelector('[data-hud-time]');
+	const tick = () => {
+		const now = new Date();
+		if (dateEl) dateEl.textContent = formatHudDate(now);
+		if (timeEl) timeEl.textContent = formatHudTime(now);
+	};
+	tick();
+	setInterval(tick, 1000);
+</script>
+
+<style>
+	@import './CommandBar.css';
+</style>

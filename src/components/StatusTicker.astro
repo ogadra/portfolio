@@ -1,0 +1,32 @@
+---
+import type { GithubStats } from '../lib/github';
+import { PROFILE } from '../lib/profile';
+
+interface Props {
+	stats: GithubStats | null;
+}
+
+const { stats } = Astro.props;
+
+// Instrument readout, not localisable copy: kept out of the message catalogue.
+const message = [
+	`GITHUB ${PROFILE.github.label}`,
+	`TWITTER ${PROFILE.twitter.label}`,
+	`PUBLIC REPOS ${stats?.publicRepos ?? '--'}`,
+	`STACK ${PROFILE.stack.join(' / ')}`,
+	`CLASSIFICATION ${PROFILE.role}`,
+	`SITE ${PROFILE.siteName} / ASTRO ON CLOUDFLARE WORKERS`,
+].join('  ///  ');
+---
+
+<footer class="ticker" aria-hidden="true">
+	<div class="hazard"></div>
+	<div class="track">
+		<span>{message}&nbsp;&nbsp;///&nbsp;&nbsp;</span>
+		<span>{message}&nbsp;&nbsp;///&nbsp;&nbsp;</span>
+	</div>
+</footer>
+
+<style>
+	@import './StatusTicker.css';
+</style>

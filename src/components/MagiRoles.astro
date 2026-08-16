@@ -1,0 +1,74 @@
+---
+import type { GithubStats } from '../lib/github';
+import { languageShare } from '../lib/hudPanels';
+import { PROFILE } from '../lib/profile';
+
+interface Props {
+	stats: GithubStats | null;
+}
+
+const { stats } = Astro.props;
+
+// Instrument readout, not localisable copy: kept out of the message catalogue.
+const HEAD = { en: 'Skill Matrix', jp: '主要技術' };
+const ROWS = { register: 'Skill Register', lang: 'Primary Lang', share: 'GitHub Share' };
+const STATUS = { label: 'Status', value: '稼働中' };
+
+const [frontend, backend, infrastructure] = PROFILE.stack;
+const units = [
+	{ code: 'UNIT-01', name: 'FRONT-END', tech: frontend, accent: 'cyan' },
+	{ code: 'UNIT-02', name: 'BACK-END', tech: backend, accent: 'orange' },
+	{ code: 'UNIT-03', name: 'INFRASTRUCTURE', tech: infrastructure, accent: 'green' },
+];
+---
+
+<aside class="magi" id="skills">
+	<p class="magi-title">
+		<span class="nerv-section-label">{HEAD.en}</span>
+		<span class="magi-jp">{HEAD.jp}</span>
+	</p>
+	{
+		units.map((u) => {
+			const share = stats ? languageShare(stats.languages, u.tech) : null;
+			// the badge is what tells a missing language apart from a missing fetch
+			const badge = stats === null ? 'NO LINK' : share === null ? 'N/A' : 'OK';
+			return (
+				<div class={`unit ${u.accent}`}>
+					<div class="unit-head">
+						<div class="name-box">
+							<span class="reg">{ROWS.register}</span>
+							<p class="unit-name">{u.name}</p>
+						</div>
+						<span class="unit-badge">{u.code}</span>
+					</div>
+					<div class="rows">
+						<div class="row">
+							<span>{ROWS.lang}</span>
+							<b>{u.tech}</b>
+						</div>
+						<div class="row">
+							<span>{ROWS.share}</span>
+							<b class="num">
+								{share === null ? '--' : `${share}%`}
+								<i class={share === null ? 'na' : 'ok'}>{badge}</i>
+							</b>
+						</div>
+						<div class="row">
+							<span>{STATUS.label}</span>
+							<b class="verdict">{STATUS.value}</b>
+						</div>
+					</div>
+					{share !== null && (
+						<div class="meter" aria-hidden="true">
+							<span class="meter-fill" style={`width:${share}%`} />
+						</div>
+					)}
+				</div>
+			);
+		})
+	}
+</aside>
+
+<style>
+	@import './MagiRoles.css';
+</style>

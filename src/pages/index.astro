@@ -1,8 +1,14 @@
 ---
+import { env } from 'cloudflare:workers';
+import HudShell from '../components/HudShell.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Welcome from '../components/Welcome.astro';
+import { resolveGithubStats } from '../lib/homeStats';
+
+const { cfContext } = Astro.locals;
+
+const stats = await resolveGithubStats(env, (promise) => cfContext.waitUntil(promise));
 ---
 
 <BaseLayout>
-	<Welcome />
+	<HudShell stats={stats} />
 </BaseLayout>

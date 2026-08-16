@@ -1,0 +1,119 @@
+---
+import { ACTIVITY_DAYS, type GithubStats } from '../lib/github';
+import { formatLogStamp } from '../lib/hudClock';
+import { contributionBars } from '../lib/hudPanels';
+
+interface Props {
+	stats: GithubStats | null;
+}
+
+const { stats } = Astro.props;
+
+// Instrument readout, not localisable copy: kept out of the message catalogue.
+const HEADS = {
+	activity: { en: 'GitHub Activity', jp: '活動記録' },
+	languages: { en: 'Language Ratio', jp: '使用言語' },
+	log: { en: 'Update Log', jp: '更新履歴' },
+};
+const OFFLINE = 'DATA LINK OFFLINE';
+
+const bars = stats ? contributionBars(stats.dailyContributions) : [];
+const logText = stats?.log.map((l) => `${formatLogStamp(l.occurredAt)} ${l.label}`).join('\n');
+---
+
+<aside class="readout">
+	<div class="block nerv-panel" id="activity">
+		<p class="block-head">
+			<span class="nerv-section-label">{HEADS.activity.en}</span>
+			<span class="head-jp">{HEADS.activity.jp}</span>
+		</p>
+		{
+			stats ? (
+				<Fragment>
+					<p class="count-value">
+						{/* the count lands from the script, so the markup only holds its place */}
+						<span data-hud-contributions={stats.recentContributions}>--</span>
+						<small>CONTRIBUTIONS · {ACTIVITY_DAYS}D</small>
+					</p>
+					<div class="wave" aria-hidden="true">
+						{bars.map((b, i) => (
+							<span
+								class={b.active ? 'on' : 'off'}
+								style={`height:${b.height}%; animation-delay:${i * 60}ms`}
+							/>
+						))}
+					</div>
+					<p class="wave-caption">CONTRIBUTIONS / DAY // LAST {ACTIVITY_DAYS}D</p>
+				</Fragment>
+			) : (
+				<p class="offline">{OFFLINE}</p>
+			)
+		}
+	</div>
+
+	<div class="block nerv-panel" id="languages">
+		<p class="block-head">
+			<span class="nerv-section-label">{HEADS.languages.en}</span>
+			<span class="head-jp">{HEADS.languages.jp}</span>
+		</p>
+		{
+			stats && stats.languages.length > 0 ? (
+				stats.languages.slice(0, 3).map((lang, i) => (
+					<div class="gauge">
+						<span class="gauge-label">{lang.name}</span>
+						<span class="gauge-meter">
+							<span
+								class="gauge-fill"
+								style={`width:${lang.ratio}%; animation-delay:${i * 150}ms`}
+							/>
+						</span>
+						<span class="gauge-note">{lang.ratio}%</span>
+					</div>
+				))
+			) : (
+				<p class="offline">{OFFLINE}</p>
+			)
+		}
+	</div>
+
+	<div class="block nerv-panel" id="log">
+		<p class="block-head">
+			<span class="nerv-section-label">{HEADS.log.en}</span>
+			<span class="head-jp">{HEADS.log.jp}</span>
+		</p>
+		{
+			stats && logText ? (
+				<div class="log-window">
+					<div class="log-scroll" style={`--log-lines:${stats.log.length}`}>
+						<pre>{logText}</pre>
+						<pre aria-hidden="true">{logText}</pre>
+					</div>
+				</div>
+			) : (
+				<p class="offline">{OFFLINE}</p>
+			)
+		}
+	</div>
+</aside>
+
+<script>
+	const el = document.querySelector<HTMLElement>('#activity [data-hud-contributions]');
+	const target = Number(el?.dataset.hudContributions);
+	if (el && Number.isFinite(target)) {
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			el.textContent = String(target);
+		} else {
+			let current = 0;
+			const step = Math.max(1, Math.ceil(target / 12));
+			const timer = setInterval(() => {
+				current = Math.min(target, current + Math.ceil(Math.random() * step));
+				el.textContent = String(current);
+				if (current >= target) clearInterval(timer);
+			}, 70);
+		}
+	}
+</script>
+
+<style>
+	@import './DataReadout.css';
+</style>

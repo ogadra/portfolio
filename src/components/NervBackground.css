@@ -1,0 +1,116 @@
+.nerv-background {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.hex-layer {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	animation: hex-breathe 8s ease-in-out infinite;
+}
+@keyframes hex-breathe {
+	0%,
+	100% {
+		opacity: 0.06;
+	}
+	50% {
+		opacity: 0.12;
+	}
+}
+
+/* kept to an outer band so the rings don't collide with the subject reticle */
+.rings {
+	position: absolute;
+	inset: 0;
+	background: repeating-radial-gradient(
+		circle at var(--radar-cx, 50%) var(--radar-cy, 50%),
+		transparent 0 118px,
+		rgba(255, 153, 0, 0.045) 118px 120px
+	);
+	mask-image: radial-gradient(
+		circle at var(--radar-cx, 50%) var(--radar-cy, 50%),
+		transparent 0 46%,
+		#000 62%,
+		transparent 84%
+	);
+	-webkit-mask-image: radial-gradient(
+		circle at var(--radar-cx, 50%) var(--radar-cy, 50%),
+		transparent 0 46%,
+		#000 62%,
+		transparent 84%
+	);
+}
+
+.sweep {
+	position: absolute;
+	left: var(--radar-cx, 50%);
+	top: var(--radar-cy, 50%);
+	width: 200vmax;
+	height: 200vmax;
+	transform: translate(-50%, -50%);
+	/* bright leading edge at 130deg with the tail ramping up behind it, so a
+	   clockwise sweep shows the sharp edge in front and the fade trailing */
+	background: conic-gradient(
+		from 0deg,
+		rgba(255, 153, 0, 0) 0deg,
+		rgba(255, 153, 0, 0.08) 96deg,
+		rgba(255, 153, 0, 0.2) 130deg,
+		transparent 131deg,
+		transparent 360deg
+	);
+	/* faded at the edges so the beam has no hard outer ring */
+	mask-image: radial-gradient(circle at 50% 50%, #000 0 52%, transparent 88%);
+	-webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0 52%, transparent 88%);
+	animation: sweep-rotate 16s linear infinite;
+	will-change: transform;
+}
+@keyframes sweep-rotate {
+	to {
+		transform: translate(-50%, -50%) rotate(1turn);
+	}
+}
+
+.blips {
+	position: absolute;
+	inset: 0;
+}
+.blips span {
+	position: absolute;
+	width: 6px;
+	height: 6px;
+	margin: -3px 0 0 -3px;
+	transform: rotate(45deg);
+	animation: blip 4.5s ease-in-out infinite;
+}
+.blips .orange {
+	background: var(--nerv-orange);
+	box-shadow: 0 0 6px rgba(255, 153, 0, 0.6);
+}
+.blips .cyan {
+	background: var(--nerv-cyan);
+	box-shadow: 0 0 6px rgba(67, 213, 220, 0.6);
+}
+@keyframes blip {
+	0%,
+	100% {
+		opacity: 0;
+		transform: rotate(45deg) scale(0.4);
+	}
+	50% {
+		opacity: 0.7;
+		transform: rotate(45deg) scale(1);
+	}
+}
+
+.guide {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background: var(--nerv-line-soft);
+}

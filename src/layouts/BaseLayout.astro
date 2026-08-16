@@ -1,7 +1,8 @@
 ---
 import { getLocale } from '../paraglide/runtime.js';
-import GridBackground from '../components/GridBackground.astro';
+import BootOverlay from '../components/BootOverlay.astro';
 import '../styles/global.css';
+import criticalCss from './BaseLayout.critical.css?raw';
 
 interface Props {
 	title?: string;
@@ -17,9 +18,17 @@ const { title = 'ogadra.com' } = Astro.props;
 		<link rel="icon" type="image/png" href="/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>{title}</title>
+		<link
+			rel="preload"
+			href="/fonts/Oswald-Medium.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<style is:inline set:html={criticalCss}></style>
 	</head>
 	<body>
-		<GridBackground />
+		<BootOverlay />
 		<div class="content-root">
 			<slot />
 		</div>
@@ -27,9 +36,5 @@ const { title = 'ogadra.com' } = Astro.props;
 </html>
 
 <style>
-	.content-root {
-		position: fixed;
-		inset: 0;
-		z-index: 10;
-	}
+	@import './BaseLayout.css';
 </style>

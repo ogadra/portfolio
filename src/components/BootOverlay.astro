@@ -1,0 +1,53 @@
+---
+import BootReticle from '../assets/bootReticle.svg';
+---
+
+<div id="boot" aria-hidden="true">
+	<span class="boot-corner tl"></span>
+	<span class="boot-corner tr"></span>
+	<span class="boot-corner bl"></span>
+	<span class="boot-corner br"></span>
+
+	<div class="boot-inner">
+		<BootReticle class="reticle" />
+
+		<div class="boot-readout">
+			<span class="boot-status">SYSTEM STARTUP</span>
+			<span class="boot-pct"><span data-boot-pct>000</span>%</span>
+		</div>
+		<div class="boot-progress"><span class="boot-progress-fill"></span></div>
+
+		<ul class="boot-log">
+			<li style="animation-delay: 0.15s">GITHUB LINK ........... OK</li>
+			<li style="animation-delay: 0.4s">COMMIT HISTORY ........ OK</li>
+			<li style="animation-delay: 0.65s">HUD RENDER ............ OK</li>
+		</ul>
+	</div>
+</div>
+
+<script is:inline>
+	(() => {
+		const el = document.getElementById('boot');
+		const pct = el.querySelector('[data-boot-pct]');
+		let v = 0;
+		const timer = setInterval(() => {
+			v = Math.min(100, v + Math.ceil(Math.random() * 14));
+			pct.textContent = String(v).padStart(3, '0');
+			if (v >= 100) clearInterval(timer);
+		}, 80);
+		// the overlay can leave before the counter reaches 100, so stop the timer
+		// with it rather than waiting for the counter to finish on a detached node
+		const remove = () => {
+			clearInterval(timer);
+			el.remove();
+		};
+		el.addEventListener('animationend', (e) => {
+			if (e.target === el && e.animationName === 'boot-out') remove();
+		});
+		setTimeout(remove, 2500);
+	})();
+</script>
+
+<style is:global>
+	@import './BootOverlay.css';
+</style>

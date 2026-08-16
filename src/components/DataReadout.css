@@ -1,0 +1,164 @@
+.readout {
+	display: flex;
+	flex-direction: column;
+	/* the HUD centres its grid row, so a column that should fill it says so here */
+	align-self: stretch;
+	justify-content: center;
+	gap: 0.75rem;
+	min-width: 0;
+}
+
+.block {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	padding: 0.75rem;
+}
+
+.block-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 0.5rem;
+}
+.head-jp {
+	font-family: var(--font-serif-jp);
+	font-weight: 900;
+	font-size: 0.62rem;
+	letter-spacing: 0.3em;
+	color: var(--nerv-white);
+	opacity: 0.55;
+	white-space: nowrap;
+}
+
+/* the unit sits under the count, which is wide enough at three digits to crowd it off the line */
+.count-value {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35em;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: 2.3rem;
+	line-height: 1;
+	color: var(--nerv-orange);
+	text-shadow: 0 0 6px rgba(255, 153, 0, 0.4);
+}
+.count-value small {
+	font-size: 0.58rem;
+	letter-spacing: 0.25em;
+	color: var(--nerv-white);
+	opacity: 0.6;
+	text-shadow: none;
+}
+
+.wave {
+	display: flex;
+	align-items: flex-end;
+	gap: 3px;
+	height: 40px;
+}
+.wave span {
+	flex: 1;
+	transform-origin: bottom;
+	transform: scaleY(0);
+	opacity: 0;
+	animation: wave-rise 0.5s steps(6, end) forwards;
+}
+.wave span.on {
+	background: var(--nerv-orange);
+	--bar-opacity: 0.85;
+}
+.wave span.off {
+	background: var(--nerv-white);
+	--bar-opacity: 0.2;
+}
+@keyframes wave-rise {
+	to {
+		transform: scaleY(1);
+		opacity: var(--bar-opacity);
+	}
+}
+.wave-caption {
+	font-family: var(--font-mono);
+	font-size: 0.52rem;
+	letter-spacing: 0.18em;
+	color: var(--nerv-white);
+	opacity: 0.45;
+}
+
+.gauge {
+	display: grid;
+	grid-template-columns: 6.5em 1fr auto;
+	align-items: center;
+	gap: 0.5em;
+	font-family: var(--font-mono);
+	font-size: 0.6rem;
+	letter-spacing: 0.08em;
+}
+.gauge-label {
+	color: var(--nerv-white);
+	opacity: 0.7;
+	white-space: nowrap;
+}
+.gauge-meter {
+	height: 8px;
+	border: 1px solid rgba(255, 153, 0, 0.18);
+	padding: 1px;
+	overflow: hidden;
+}
+.gauge-fill {
+	display: block;
+	height: 100%;
+	background: repeating-linear-gradient(90deg, var(--nerv-orange) 0 6px, transparent 6px 8px);
+	transform: scaleX(0);
+	transform-origin: left;
+	animation: gauge-draw 0.9s steps(12, end) forwards;
+}
+@keyframes gauge-draw {
+	to {
+		transform: scaleX(1);
+	}
+}
+.gauge-note {
+	color: var(--nerv-green);
+	font-variant-numeric: tabular-nums;
+}
+
+.log-window {
+	height: 108px;
+	overflow: hidden;
+	position: relative;
+}
+/* fade the last line fully out so it reads as a scroll edge */
+.log-window::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, transparent 42%, rgba(4, 4, 4, 0.85) 80%, #040404 100%);
+}
+.log-scroll {
+	animation: log-up 18s steps(var(--log-lines, 12), end) infinite;
+}
+.log-scroll pre {
+	font-family: var(--font-mono);
+	font-size: 0.58rem;
+	line-height: 1.7;
+	letter-spacing: 0.08em;
+	color: var(--nerv-orange);
+	opacity: 0.6;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+@keyframes log-up {
+	to {
+		transform: translateY(-50%);
+	}
+}
+
+.offline {
+	font-family: var(--font-mono);
+	font-size: 0.62rem;
+	letter-spacing: 0.25em;
+	color: var(--nerv-red);
+	animation: nerv-pulse 1.5s step-end infinite;
+}

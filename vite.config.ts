@@ -22,7 +22,7 @@ export default defineConfig({
 		semi: true,
 	},
 	test: {
-		include: ['tests/**/*.test.ts'],
+		include: ['src/**/*.test.ts'],
 		environment: 'node',
 	},
 });
