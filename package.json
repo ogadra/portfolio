@@ -19,7 +19,7 @@
 		"@astrojs/cloudflare": "^14.2.1",
 		"@inlang/paraglide-js": "^2.23.1",
 		"astro": "^7.2.2",
-		"temporal-polyfill": "^1.0.3"
+		"temporal-polyfill": "^1.0.4"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.61.1",
